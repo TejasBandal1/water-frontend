@@ -66,37 +66,41 @@ export const AuthProvider = ({ children }) => {
     setAutoLogout(payload.exp);
   }, []);
 
-  /* =========================
-     LOGIN
-  ========================== */
+ /* =========================
+   LOGIN
+========================== */
 
-  const login = async (email, password) => {
-    const response = await API.post("/auth/login", {
-      email,
-      password
-    });
+const login = async (email, password) => {
+  const formData = new URLSearchParams();
+  formData.append("username", email);   // 🔥 MUST be username
+  formData.append("password", password);
 
-    const token = response.data.access_token;
-    const payload = parseToken(token);
+  const response = await API.post("/auth/login", formData, {
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+  });
 
-    if (!payload) {
-      throw new Error("Invalid token");
-    }
+  const token = response.data.access_token;
+  const payload = parseToken(token);
 
-    const loggedUser = {
-      token,
-      role: payload.role?.toLowerCase(),   // 🔥 FIXED
-      name: payload.name || "",
-      email: payload.sub || ""
-    };
+  if (!payload) {
+    throw new Error("Invalid token");
+  }
 
-    localStorage.setItem("token", token);
-    setUser(loggedUser);
-    setAutoLogout(payload.exp);
-
-    return loggedUser.role;   // return lowercase role
+  const loggedUser = {
+    token,
+    role: payload.role?.toLowerCase(),
+    name: payload.name || "",
+    email: payload.sub || ""
   };
 
+  localStorage.setItem("token", token);
+  setUser(loggedUser);
+  setAutoLogout(payload.exp);
+
+  return loggedUser.role;
+};
   /* =========================
      LOGOUT
   ========================== */
