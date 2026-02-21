@@ -1,4 +1,22 @@
 const pad = (value) => String(value).padStart(2, "0");
+const DEFAULT_LOCALE = "en-IN";
+const DEFAULT_TIME_ZONE = "Asia/Kolkata";
+
+const getDatePartsInTimeZone = (date, timeZone = DEFAULT_TIME_ZONE) => {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(date);
+
+  const year = parts.find((p) => p.type === "year")?.value;
+  const month = parts.find((p) => p.type === "month")?.value;
+  const day = parts.find((p) => p.type === "day")?.value;
+
+  if (!year || !month || !day) return null;
+  return { year, month, day };
+};
 
 export const parseDateValue = (value) => {
   if (!value) return null;
@@ -12,27 +30,57 @@ export const parseDateValue = (value) => {
     return new Date(year, month - 1, day);
   }
 
+  if (
+    typeof value === "string" &&
+    /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d+)?$/.test(value.trim())
+  ) {
+    // Backend stores naive UTC timestamps (no timezone); treat them as UTC.
+    const normalized = value.trim().replace(" ", "T");
+    const [datePart, timePart = "00:00:00"] = normalized.split("T");
+    const [hmsPart, fractionPart = ""] = timePart.split(".");
+    const milliPart = fractionPart
+      ? `.${fractionPart.slice(0, 3).padEnd(3, "0")}`
+      : "";
+
+    const parsedUtc = new Date(`${datePart}T${hmsPart}${milliPart}Z`);
+    return Number.isNaN(parsedUtc.getTime()) ? null : parsedUtc;
+  }
+
   const parsed = new Date(value);
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 };
 
 export const getLocalDateInputValue = (value = new Date()) => {
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return value;
+  }
+
   const date = parseDateValue(value);
   if (!date) return "";
 
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  const parts = getDatePartsInTimeZone(date);
+  if (!parts) return "";
+  return `${parts.year}-${parts.month}-${parts.day}`;
 };
 
 export const toLocalDateKey = (value) => getLocalDateInputValue(value);
 
-export const formatLocalDate = (value, locale = "en-IN") => {
+export const formatLocalDate = (
+  value,
+  locale = DEFAULT_LOCALE,
+  timeZone = DEFAULT_TIME_ZONE
+) => {
   const date = parseDateValue(value);
-  return date ? date.toLocaleDateString(locale) : "-";
+  return date ? date.toLocaleDateString(locale, { timeZone }) : "-";
 };
 
-export const formatLocalDateTime = (value, locale = "en-IN") => {
+export const formatLocalDateTime = (
+  value,
+  locale = DEFAULT_LOCALE,
+  timeZone = DEFAULT_TIME_ZONE
+) => {
   const date = parseDateValue(value);
-  return date ? date.toLocaleString(locale) : "-";
+  return date ? date.toLocaleString(locale, { timeZone }) : "-";
 };
 
 export const compareDatesDesc = (a, b) => {
