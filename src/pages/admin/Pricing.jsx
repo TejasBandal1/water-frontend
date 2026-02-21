@@ -6,6 +6,7 @@ import {
   getClientPrices,
   setClientPrice
 } from "../../api/admin";
+import { compareDatesDesc, formatLocalDate } from "../../utils/dateTime";
 
 const ITEMS_PER_PAGE = 8;
 
@@ -67,8 +68,7 @@ const Pricing = () => {
   const formatCurrency = (value) =>
     `₹ ${Number(value || 0).toLocaleString("en-IN")}`;
 
-  const formatDate = (date) =>
-    date ? new Date(date).toLocaleDateString("en-IN") : "-";
+  const formatDate = (date) => formatLocalDate(date);
 
   const getClientName = (id) =>
     clients.find((c) => c.id === id)?.name || "";
@@ -124,10 +124,11 @@ const Pricing = () => {
     });
 
     Object.keys(map).forEach((k) => {
-      map[k] = map[k].sort(
-        (a, b) =>
-          new Date(b.effective_from || b.created_at) -
-          new Date(a.effective_from || a.created_at)
+      map[k] = map[k].sort((a, b) =>
+        compareDatesDesc(
+          a.effective_from || a.created_at,
+          b.effective_from || b.created_at
+        )
       );
     });
 
@@ -163,9 +164,9 @@ const Pricing = () => {
       if (aLatest && !bLatest) return -1;
       if (!aLatest && bLatest) return 1;
 
-      return (
-        new Date(b.effective_from || b.created_at) -
-        new Date(a.effective_from || a.created_at)
+      return compareDatesDesc(
+        a.effective_from || a.created_at,
+        b.effective_from || b.created_at
       );
     });
   }, [prices, selectedClientFilter, searchTerm, latestMap]);

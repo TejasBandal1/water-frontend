@@ -6,6 +6,7 @@ import {
   getDriverOrders
 } from "../../api/admin";
 import { Link } from "react-router-dom";
+import { isSameLocalDay } from "../../utils/dateTime";
 
 const DriverDashboard = () => {
   const { user } = useContext(AuthContext);
@@ -47,21 +48,19 @@ const DriverDashboard = () => {
 
   /* ================= CALCULATIONS ================= */
 
-  const todayString = new Date().toDateString();
+  const today = new Date();
 
   const todayTrips = useMemo(() => {
     return trips.filter(
       (t) =>
-        new Date(t.created_at).toDateString() ===
-        todayString
+        isSameLocalDay(t.created_at, today)
     );
   }, [trips]);
 
   const todayOrders = useMemo(() => {
     return orders.filter(
       (o) =>
-        new Date(o.created_at).toDateString() ===
-        todayString
+        isSameLocalDay(o.created_at, today)
     );
   }, [orders]);
 

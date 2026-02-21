@@ -1,6 +1,7 @@
 import { useEffect, useState, useContext, useMemo } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import { getMyInvoices, getMyBalance } from "../../api/client";
+import { formatLocalDate } from "../../utils/dateTime";
 
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
@@ -40,8 +41,7 @@ const Dashboard = () => {
   const formatCurrency = (value) =>
     `₹ ${Number(value || 0).toLocaleString("en-IN")}`;
 
-  const formatDate = (date) =>
-    date ? new Date(date).toLocaleDateString("en-IN") : "-";
+  const formatDate = (date) => formatLocalDate(date);
 
   /* ================= CALCULATIONS ================= */
 

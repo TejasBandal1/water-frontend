@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import { getInvoiceDetail } from "../../api/billing";
 import { recordPayment } from "../../api/payments";
+import { formatLocalDate } from "../../utils/dateTime";
 
 const InvoiceDetail = () => {
   const { invoiceId } = useParams();
@@ -117,7 +118,7 @@ const InvoiceDetail = () => {
           </h1>
           <p className="text-gray-500 text-sm">
             Created on{" "}
-            {new Date(invoice.created_at).toLocaleDateString("en-IN")}
+            {formatLocalDate(invoice.created_at)}
           </p>
         </div>
 
@@ -202,7 +203,7 @@ const InvoiceDetail = () => {
                     className="flex justify-between bg-gray-50 p-3 rounded-lg"
                   >
                     <span>
-                      {new Date(p.created_at).toLocaleDateString("en-IN")}
+                      {formatLocalDate(p.created_at)}
                     </span>
                     <span className="font-semibold">
                       {formatCurrency(p.amount)}

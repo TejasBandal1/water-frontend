@@ -1,6 +1,7 @@
 import { useEffect, useState, useContext, useMemo } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import { getAuditLogs } from "../../api/admin";
+import { formatLocalDateTime } from "../../utils/dateTime";
 
 const AuditLogs = () => {
   const { user } = useContext(AuthContext);
@@ -42,8 +43,7 @@ const AuditLogs = () => {
     });
   }, [logs, search]);
 
-  const formatDate = (date) =>
-    new Date(date).toLocaleString("en-IN");
+  const formatDate = (date) => formatLocalDateTime(date);
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 sm:px-6 lg:px-10 py-6">

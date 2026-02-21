@@ -1,6 +1,11 @@
 import { useEffect, useState, useContext, useMemo } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import { getDriverTrips } from "../../api/admin";
+import {
+  formatLocalDateTime,
+  isSameLocalDay,
+  parseDateValue
+} from "../../utils/dateTime";
 
 const DriverTripHistory = () => {
   const { user } = useContext(AuthContext);
@@ -35,10 +40,11 @@ const DriverTripHistory = () => {
     const now = new Date();
 
     return trips.filter((trip) => {
-      const tripDate = new Date(trip.created_at);
+      const tripDate = parseDateValue(trip.created_at);
+      if (!tripDate) return false;
 
       if (filterType === "daily" && selectedDate) {
-        return tripDate.toDateString() === new Date(selectedDate).toDateString();
+        return isSameLocalDay(tripDate, selectedDate);
       }
 
       if (filterType === "weekly") {
@@ -155,7 +161,7 @@ const DriverTripHistory = () => {
                     </td>
 
                     <td className="py-3 px-4">
-                      {new Date(trip.created_at).toLocaleString()}
+                      {formatLocalDateTime(trip.created_at)}
                     </td>
 
                   </tr>

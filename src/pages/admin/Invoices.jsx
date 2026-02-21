@@ -8,6 +8,11 @@ import {
   generateAllInvoices,
   cancelInvoice
 } from "../../api/admin";
+import {
+  compareDatesDesc,
+  formatLocalDate,
+  isWithinLocalDateRange
+} from "../../utils/dateTime";
 
 const ITEMS_PER_PAGE = 8;
 
@@ -51,8 +56,7 @@ const Invoices = () => {
   const formatCurrency = (value) =>
     `₹ ${Number(value || 0).toLocaleString("en-IN")}`;
 
-  const formatDate = (date) =>
-    date ? new Date(date).toLocaleDateString("en-IN") : "-";
+  const formatDate = (date) => formatLocalDate(date);
 
   /* ================= ACTIONS ================= */
 
@@ -82,7 +86,6 @@ const Invoices = () => {
     return invoices
       .filter((inv) => {
         const clientName = inv.client_name?.toLowerCase() || "";
-        const createdDate = new Date(inv.created_at);
 
         return (
           (clientName.includes(searchTerm.toLowerCase()) ||
@@ -91,11 +94,10 @@ const Invoices = () => {
             inv.client_id === Number(selectedClient)) &&
           (selectedStatus === "all" ||
             inv.status === selectedStatus) &&
-          (!fromDate || createdDate >= new Date(fromDate)) &&
-          (!toDate || createdDate <= new Date(toDate))
+          isWithinLocalDateRange(inv.created_at, fromDate, toDate)
         );
       })
-      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      .sort((a, b) => compareDatesDesc(a.created_at, b.created_at));
   }, [
     invoices,
     searchTerm,

@@ -1,8 +1,12 @@
 import { useEffect, useState, useContext, useMemo } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import axios from "axios";
+import {
+  getLocalDateInputValue,
+  toLocalDateKey
+} from "../../utils/dateTime";
 
-const getDateKey = (value) => String(value).slice(0, 10);
+const getDateKey = (value) => toLocalDateKey(value);
 
 const formatDateLabel = (dateKey) => {
   const [year, month, day] = dateKey.split("-");
@@ -72,8 +76,8 @@ const DeliveryMatrix = () => {
     }
 
     setFilterType(type);
-    setStartDate(start.toISOString().split("T")[0]);
-    setEndDate(end.toISOString().split("T")[0]);
+    setStartDate(getLocalDateInputValue(start));
+    setEndDate(getLocalDateInputValue(end));
   };
 
   /* ================= FETCH DATA ================= */
