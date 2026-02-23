@@ -103,7 +103,7 @@ const Users = () => {
       await deleteUser(userId, user.token);
       showToast("User deleted");
       fetchData();
-    } catch (err) {
+    } catch {
       showToast("Delete failed");
     }
   };

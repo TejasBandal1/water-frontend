@@ -77,7 +77,7 @@ const InvoiceDetail = () => {
       showToast("Payment recorded successfully");
       setPaymentAmount("");
       fetchData();
-    } catch (err) {
+    } catch {
       showToast("Failed to record payment");
     } finally {
       setProcessing(false);

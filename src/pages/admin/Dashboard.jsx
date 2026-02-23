@@ -1,5 +1,4 @@
-import { useEffect, useState, useContext, useMemo } from "react";
-import { AuthContext } from "../../context/AuthContext";
+import { useEffect, useState, useMemo } from "react";
 import {
   getOutstanding,
   getMonthlyRevenue,
@@ -20,8 +19,6 @@ import {
 } from "recharts";
 
 const AdminDashboard = () => {
-  const { user } = useContext(AuthContext);
-
   const [period, setPeriod] = useState("monthly");
   const [summary, setSummary] = useState({});
   const [revenueData, setRevenueData] = useState([]);

@@ -1,4 +1,3 @@
-const pad = (value) => String(value).padStart(2, "0");
 const DEFAULT_LOCALE = "en-IN";
 const DEFAULT_TIME_ZONE = "Asia/Kolkata";
 

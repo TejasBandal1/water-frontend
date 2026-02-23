@@ -91,6 +91,16 @@ export const getDriverOrders = async () => {
   return res.data;
 };
 
+export const getDrivers = async () => {
+  const res = await API.get("/admin/drivers");
+  return res.data;
+};
+
+export const createManualBill = async (data) => {
+  const res = await API.post("/admin/manual-bills", data);
+  return res.data;
+};
+
 /* ==========================================
    BILLING
 ========================================== */

@@ -28,7 +28,7 @@ const Login = () => {
       setLoading(true);
       const role = await login(email, password);
       navigate(`/${role.toLowerCase()}`);
-    } catch (err) {
+    } catch {
       setError("Invalid email or password");
     } finally {
       setLoading(false);

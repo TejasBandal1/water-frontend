@@ -133,7 +133,7 @@ const Trip = () => {
       setClientSearch("");
       fetchData();
 
-    } catch (err) {
+    } catch {
       alert("Failed to record trip");
     } finally {
       setSubmitting(false);
