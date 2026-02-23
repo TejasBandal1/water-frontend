@@ -13,6 +13,7 @@ const Trip = () => {
   const [containers, setContainers] = useState([]);
   const [selectedClient, setSelectedClient] = useState("");
   const [clientSearch, setClientSearch] = useState("");
+  const [showClientResults, setShowClientResults] = useState(false);
   const [quantities, setQuantities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -48,9 +49,10 @@ const Trip = () => {
   /* ================= CLIENT FILTER ================= */
 
   const filteredClients = useMemo(() => {
-    const search = clientSearch.toLowerCase();
+    const search = clientSearch.trim().toLowerCase();
 
-    return clients.filter((c) => {
+    const matches = clients.filter((c) => {
+      if (!search) return true;
       return (
         c.name?.toLowerCase().includes(search) ||
         c.city?.toLowerCase().includes(search) ||
@@ -58,7 +60,23 @@ const Trip = () => {
         c.location?.toLowerCase().includes(search)
       );
     });
+
+    return matches.slice(0, 8);
   }, [clients, clientSearch]);
+
+  const selectedClientDetails = useMemo(
+    () => clients.find((c) => String(c.id) === String(selectedClient)) || null,
+    [clients, selectedClient]
+  );
+
+  const formatClientLocation = (client) =>
+    client.city || client.location || client.address || "No location";
+
+  const selectClient = (client) => {
+    setSelectedClient(String(client.id));
+    setClientSearch(client.name || "");
+    setShowClientResults(false);
+  };
 
   /* ================= HANDLE INPUT ================= */
 
@@ -146,37 +164,97 @@ const Trip = () => {
       <div className="bg-white p-6 rounded-2xl shadow mb-8">
 
         <label className="block text-sm font-medium mb-3">
-          Select Client
+          Search and Select Client
         </label>
 
-        {/* Search Input */}
-        <input
-          type="text"
-          placeholder="Search by name, city, or location..."
-          value={clientSearch}
-          onChange={(e) => setClientSearch(e.target.value)}
-          className="w-full md:w-96 p-3 border rounded-lg mb-4 focus:ring-2 focus:ring-blue-500"
-        />
+        <div className="relative w-full max-w-xl">
+          <input
+            type="text"
+            placeholder="Search client by name, city, or address..."
+            value={clientSearch}
+            onFocus={() => setShowClientResults(true)}
+            onBlur={() => {
+              window.setTimeout(() => setShowClientResults(false), 120);
+            }}
+            onChange={(e) => {
+              const value = e.target.value;
+              setClientSearch(value);
+              setShowClientResults(true);
+              if (
+                selectedClientDetails &&
+                value.trim() !== selectedClientDetails.name
+              ) {
+                setSelectedClient("");
+              }
+            }}
+            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 pr-20 text-sm shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+          />
 
-        {/* Dropdown */}
-        <select
-          value={selectedClient}
-          onChange={(e) => setSelectedClient(e.target.value)}
-          className="w-full md:w-96 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">Choose Client</option>
+          {clientSearch && (
+            <button
+              type="button"
+              onClick={() => {
+                setClientSearch("");
+                setSelectedClient("");
+                setShowClientResults(false);
+              }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-200"
+            >
+              Clear
+            </button>
+          )}
 
-          {filteredClients.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name} - {c.city || c.address || "No location"}
-            </option>
-          ))}
-        </select>
+          {showClientResults && (
+            <div className="absolute z-20 mt-2 max-h-72 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg">
+              {filteredClients.length === 0 ? (
+                <p className="px-4 py-3 text-sm text-gray-500">
+                  No clients found.
+                </p>
+              ) : (
+                filteredClients.map((client) => (
+                  <button
+                    key={client.id}
+                    type="button"
+                    onMouseDown={() => selectClient(client)}
+                    className="block w-full border-b border-gray-100 px-4 py-3 text-left last:border-b-0 hover:bg-blue-50"
+                  >
+                    <p className="text-sm font-semibold text-gray-900">
+                      {client.name}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {formatClientLocation(client)}
+                    </p>
+                  </button>
+                ))
+              )}
+            </div>
+          )}
+        </div>
 
-        {filteredClients.length === 0 && (
-          <p className="text-sm text-gray-500 mt-2">
-            No clients found.
-          </p>
+        {selectedClientDetails && (
+          <div className="mt-4 flex flex-col gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+                Selected Client
+              </p>
+              <p className="text-sm font-semibold text-gray-900">
+                {selectedClientDetails.name}
+              </p>
+              <p className="text-xs text-gray-600">
+                {formatClientLocation(selectedClientDetails)}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedClient("");
+                setClientSearch("");
+              }}
+              className="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-gray-700 shadow-sm ring-1 ring-gray-200 hover:bg-gray-50"
+            >
+              Change Client
+            </button>
+          </div>
         )}
 
       </div>
