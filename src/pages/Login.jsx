@@ -1,6 +1,7 @@
 import { useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import { BRAND } from "../config/brand";
 
 const Login = () => {
   const { login } = useContext(AuthContext);
@@ -36,14 +37,17 @@ const Login = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4 py-10">
-      <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white/95 p-8 shadow-2xl backdrop-blur-sm sm:p-10">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-10">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,rgba(15,23,42,0.18),transparent_45%),radial-gradient(circle_at_100%_100%,rgba(30,41,59,0.2),transparent_42%)]" />
+
+      <div className="relative w-full max-w-md rounded-3xl border border-slate-200 bg-white/95 p-8 shadow-2xl backdrop-blur-sm sm:p-10">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-3 inline-flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">
-            WM
+          <div className="mx-auto mb-3 inline-flex h-12 w-12 items-center justify-center rounded-full bg-slate-900 text-sm font-bold text-white">
+            {BRAND.initials}
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">Water Management</h1>
-          <p className="mt-2 text-sm text-slate-500">Sign in to continue</p>
+          <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">{BRAND.name}</h1>
+          <p className="mt-1 text-xs uppercase tracking-[0.18em] text-slate-500">{BRAND.shortName}</p>
+          <p className="mt-2 text-sm text-slate-500">Secure sign in to continue</p>
         </div>
 
         {error && (
@@ -61,7 +65,7 @@ const Login = () => {
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 p-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              className="w-full rounded-xl border border-slate-300 p-3 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-300"
             />
           </div>
 
@@ -74,7 +78,7 @@ const Login = () => {
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-xl border border-slate-300 p-3 pr-16 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                className="w-full rounded-xl border border-slate-300 p-3 pr-16 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-300"
               />
               <button
                 type="button"
@@ -90,7 +94,7 @@ const Login = () => {
             type="submit"
             disabled={loading}
             className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 font-semibold text-white transition ${
-              loading ? "cursor-not-allowed bg-slate-400" : "bg-blue-600 hover:bg-blue-700"
+              loading ? "cursor-not-allowed bg-slate-500" : "bg-slate-900 hover:bg-slate-800"
             }`}
           >
             {loading && (
@@ -101,7 +105,7 @@ const Login = () => {
         </form>
 
         <div className="mt-6 text-center text-xs text-slate-400">
-          (c) {new Date().getFullYear()} Water Management System
+          (c) {new Date().getFullYear()} {BRAND.name}
         </div>
       </div>
     </div>

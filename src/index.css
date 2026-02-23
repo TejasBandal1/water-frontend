@@ -2,6 +2,8 @@
 
 :root {
   color-scheme: light;
+  --rr-surface: #f8fafc;
+  --rr-text: #0f172a;
 }
 
 html,
@@ -12,12 +14,12 @@ body,
 
 body {
   margin: 0;
-  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  color: #0f172a;
+  font-family: "Manrope", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  color: var(--rr-text);
   background:
-    radial-gradient(circle at 0% 0%, #dbeafe 0%, rgba(219, 234, 254, 0) 45%),
-    radial-gradient(circle at 100% 100%, #e2e8f0 0%, rgba(226, 232, 240, 0) 42%),
-    #f8fafc;
+    radial-gradient(circle at 0% 0%, #e2e8f0 0%, rgba(226, 232, 240, 0) 46%),
+    radial-gradient(circle at 100% 100%, #cbd5e1 0%, rgba(203, 213, 225, 0) 42%),
+    var(--rr-surface);
 }
 
 * {

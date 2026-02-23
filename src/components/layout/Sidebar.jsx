@@ -1,17 +1,18 @@
 import { NavLink } from "react-router-dom";
 import { useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
+import { BRAND } from "../../config/brand";
 
 const getLinkClasses = ({ isActive }) =>
   [
     "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
     isActive
-      ? "bg-blue-600 text-white shadow-sm"
-      : "text-slate-300 hover:bg-slate-800 hover:text-white"
+      ? "bg-white text-slate-900 shadow-sm"
+      : "text-slate-200 hover:bg-slate-800/80 hover:text-white"
   ].join(" ");
 
 const IconDot = ({ code }) => (
-  <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-slate-800 text-[10px] font-bold leading-none text-slate-300 group-hover:bg-slate-700 group-hover:text-white">
+  <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-slate-700/80 text-[10px] font-bold leading-none text-slate-200 group-hover:bg-slate-700 group-hover:text-white">
     {code}
   </span>
 );
@@ -29,15 +30,15 @@ const Sidebar = ({ collapsed, onNavigate }) => {
   if (!user) return null;
 
   return (
-    <aside className="flex h-full flex-col bg-slate-900 p-4 text-white">
+    <aside className="flex h-full flex-col bg-gradient-to-b from-slate-950 via-slate-900 to-slate-900 p-4 text-white">
       <div className="mb-8 px-1">
         {!collapsed ? (
           <>
-            <h2 className="text-xl font-bold tracking-tight">WaterSys</h2>
-            <p className="text-xs text-slate-400">Operations and Billing</p>
+            <h2 className="text-xl font-bold tracking-tight">{BRAND.name}</h2>
+            <p className="text-xs text-slate-400">{BRAND.shortName}</p>
           </>
         ) : (
-          <div className="text-center text-xs font-semibold text-slate-300">WS</div>
+          <div className="text-center text-xs font-semibold text-slate-300">{BRAND.initials}</div>
         )}
       </div>
 
