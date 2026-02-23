@@ -131,7 +131,6 @@ const DriverTripHistory = () => {
                   <th className="py-3 px-4">Client</th>
                   <th className="py-3 px-4">Delivered</th>
                   <th className="py-3 px-4">Returned</th>
-                  <th className="py-3 px-4">Total Amount</th>
                   <th className="py-3 px-4">Date</th>
                 </tr>
               </thead>
@@ -154,10 +153,6 @@ const DriverTripHistory = () => {
 
                     <td className="py-3 px-4">
                       {trip.total_returned || 0}
-                    </td>
-
-                    <td className="py-3 px-4 font-semibold text-green-600">
-                      Rs. {trip.total_amount || 0}
                     </td>
 
                     <td className="py-3 px-4">
