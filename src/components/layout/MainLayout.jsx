@@ -8,7 +8,7 @@ const MainLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div className="flex bg-gray-50 min-h-screen">
+    <div className="flex min-h-screen bg-transparent">
 
       {/* Sidebar */}
       <div
@@ -37,7 +37,7 @@ const MainLayout = () => {
       )}
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex min-w-0 flex-1 flex-col">
 
         <Topbar
           toggleSidebar={() => setSidebarOpen((prev) => !prev)}
@@ -45,7 +45,7 @@ const MainLayout = () => {
           collapsed={collapsed}
         />
 
-        <main className="p-4 md:p-8 flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto p-4 md:p-8">
           <Outlet />
         </main>
       </div>

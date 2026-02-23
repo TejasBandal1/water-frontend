@@ -54,7 +54,7 @@ const Invoices = () => {
   };
 
   const formatCurrency = (value) =>
-    `₹ ${Number(value || 0).toLocaleString("en-IN")}`;
+    `Rs. ${Number(value || 0).toLocaleString("en-IN")}`;
 
   const formatDate = (date) => formatLocalDate(date);
 
@@ -357,3 +357,5 @@ const SummaryCard = ({ title, value }) => (
 );
 
 export default Invoices;
+
+

@@ -28,7 +28,7 @@ const DriverOrders = () => {
 
       <div className="mb-8">
         <h1 className="text-2xl md:text-3xl font-bold">
-          📦 Orders Breakdown
+          Orders Breakdown
         </h1>
         <p className="text-gray-500 text-sm">
           Container-level delivery details
@@ -92,3 +92,4 @@ const DriverOrders = () => {
 };
 
 export default DriverOrders;
+

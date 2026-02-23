@@ -32,12 +32,12 @@ import ManagerDashboard from "./pages/manager/Dashboard";
 
 /* ================= EXTRA ================= */
 const Unauthorized = () => (
-  <div className="min-h-screen flex items-center justify-center bg-gray-100">
-    <div className="bg-white p-8 rounded-2xl shadow text-center">
-      <h1 className="text-2xl font-bold text-red-600 mb-4">
-        🚫 Unauthorized Access
+  <div className="flex min-h-screen items-center justify-center px-4">
+    <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 text-center shadow">
+      <h1 className="mb-4 text-2xl font-bold text-red-600">
+        Unauthorized Access
       </h1>
-      <p className="text-gray-500">
+      <p className="text-slate-500">
         You don't have permission to access this page.
       </p>
     </div>
@@ -45,12 +45,12 @@ const Unauthorized = () => (
 );
 
 const NotFound = () => (
-  <div className="min-h-screen flex items-center justify-center bg-gray-100">
-    <div className="bg-white p-8 rounded-2xl shadow text-center">
-      <h1 className="text-2xl font-bold mb-4">
+  <div className="flex min-h-screen items-center justify-center px-4">
+    <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 text-center shadow">
+      <h1 className="mb-4 text-2xl font-bold">
         404 - Page Not Found
       </h1>
-      <p className="text-gray-500">
+      <p className="text-slate-500">
         The page you are looking for does not exist.
       </p>
     </div>
@@ -163,3 +163,4 @@ function App() {
 }
 
 export default App;
+

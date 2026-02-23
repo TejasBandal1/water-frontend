@@ -12,7 +12,6 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  /* Clear error when typing */
   useEffect(() => {
     if (error) setError("");
   }, [email, password]);
@@ -27,13 +26,8 @@ const Login = () => {
 
     try {
       setLoading(true);
-
       const role = await login(email, password);
-
-      // Backend returns role in uppercase (ADMIN, MANAGER, etc.)
-      // Convert to lowercase to match your route paths
       navigate(`/${role.toLowerCase()}`);
-
     } catch (err) {
       setError("Invalid email or password");
     } finally {
@@ -42,51 +36,37 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-gray-100 px-4">
-
-      <div className="bg-white/90 backdrop-blur-md p-8 sm:p-10 rounded-3xl shadow-2xl w-full max-w-md border border-gray-100 transition-all duration-300">
-
-        {/* HEADER */}
-        <div className="text-center mb-8">
-          <div className="text-4xl mb-3">💧</div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
-            Water Management
-          </h1>
-          <p className="text-gray-500 text-sm mt-2">
-            Sign in to continue
-          </p>
+    <div className="flex min-h-screen items-center justify-center px-4 py-10">
+      <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white/95 p-8 shadow-2xl backdrop-blur-sm sm:p-10">
+        <div className="mb-8 text-center">
+          <div className="mx-auto mb-3 inline-flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">
+            WM
+          </div>
+          <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">Water Management</h1>
+          <p className="mt-2 text-sm text-slate-500">Sign in to continue</p>
         </div>
 
-        {/* ERROR MESSAGE */}
         {error && (
-          <div className="mb-5 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm animate-pulse">
+          <div className="mb-5 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600">
             {error}
           </div>
         )}
 
         <form onSubmit={handleLogin} className="space-y-5">
-
-          {/* EMAIL */}
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-600">
-              Email
-            </label>
+            <label className="mb-1 block text-sm font-medium text-slate-600">Email</label>
             <input
               type="email"
               autoComplete="email"
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition"
+              className="w-full rounded-xl border border-slate-300 p-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
             />
           </div>
 
-          {/* PASSWORD */}
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-600">
-              Password
-            </label>
-
+            <label className="mb-1 block text-sm font-medium text-slate-600">Password</label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
@@ -94,40 +74,34 @@ const Login = () => {
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none pr-14 transition"
+                className="w-full rounded-xl border border-slate-300 p-3 pr-16 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
               />
-
               <button
                 type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-3 text-xs font-medium text-gray-500 hover:text-gray-700"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-3 top-3 text-xs font-semibold text-slate-500 transition hover:text-slate-700"
               >
                 {showPassword ? "HIDE" : "SHOW"}
               </button>
             </div>
           </div>
 
-          {/* LOGIN BUTTON */}
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-3 rounded-xl text-white font-semibold transition flex items-center justify-center gap-2 shadow-md ${
-              loading
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700"
+            className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 font-semibold text-white transition ${
+              loading ? "cursor-not-allowed bg-slate-400" : "bg-blue-600 hover:bg-blue-700"
             }`}
           >
             {loading && (
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
             )}
             {loading ? "Signing In..." : "Login"}
           </button>
-
         </form>
 
-        {/* FOOTER */}
-        <div className="text-center text-xs text-gray-400 mt-6">
-          © {new Date().getFullYear()} Water Management System
+        <div className="mt-6 text-center text-xs text-slate-400">
+          (c) {new Date().getFullYear()} Water Management System
         </div>
       </div>
     </div>

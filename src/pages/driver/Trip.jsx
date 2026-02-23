@@ -109,7 +109,7 @@ const Trip = () => {
 
       await createTrip(tripData, user.token);
 
-      alert("✅ Trip recorded successfully!");
+      alert("Trip recorded successfully!");
 
       setSelectedClient("");
       setClientSearch("");
@@ -135,7 +135,7 @@ const Trip = () => {
       {/* ================= HEADER ================= */}
       <div className="mb-8">
         <h1 className="text-2xl md:text-3xl font-bold">
-          🚚 Record New Trip
+          Record New Trip
         </h1>
         <p className="text-gray-500 text-sm">
           Log container deliveries and returns
@@ -168,7 +168,7 @@ const Trip = () => {
 
           {filteredClients.map((c) => (
             <option key={c.id} value={c.id}>
-              {c.name} — {c.city || c.address || "No location"}
+              {c.name} - {c.city || c.address || "No location"}
             </option>
           ))}
         </select>
@@ -213,7 +213,7 @@ const Trip = () => {
             className="bg-white p-6 rounded-2xl shadow hover:shadow-md transition"
           >
             <h3 className="text-lg font-semibold mb-4">
-              📦 {container.name}
+              {container.name}
             </h3>
 
             <div className="grid grid-cols-2 gap-4">
@@ -274,3 +274,5 @@ const Trip = () => {
 };
 
 export default Trip;
+
+

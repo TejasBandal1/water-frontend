@@ -76,7 +76,7 @@ const DriverTripHistory = () => {
       <div className="mb-8 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold">
-            📋 Trip History
+            Trip History
           </h1>
           <p className="text-gray-500 text-sm">
             Complete record of your deliveries
@@ -157,7 +157,7 @@ const DriverTripHistory = () => {
                     </td>
 
                     <td className="py-3 px-4 font-semibold text-green-600">
-                      ₹ {trip.total_amount || 0}
+                      Rs. {trip.total_amount || 0}
                     </td>
 
                     <td className="py-3 px-4">
@@ -178,3 +178,4 @@ const DriverTripHistory = () => {
 };
 
 export default DriverTripHistory;
+

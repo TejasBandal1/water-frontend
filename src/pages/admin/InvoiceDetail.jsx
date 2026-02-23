@@ -33,7 +33,7 @@ const InvoiceDetail = () => {
   };
 
   const formatCurrency = (v) =>
-    `₹ ${Number(v || 0).toLocaleString("en-IN")}`;
+    `Rs. ${Number(v || 0).toLocaleString("en-IN")}`;
 
   const showToast = (msg) => {
     setToast(msg);
@@ -107,7 +107,7 @@ const InvoiceDetail = () => {
         onClick={() => navigate("/admin/invoices")}
         className="mb-6 text-blue-600 hover:underline"
       >
-        ← Back to Invoices
+        Back to Invoices
       </button>
 
       {/* Header */}
@@ -131,7 +131,7 @@ const InvoiceDetail = () => {
 
       {invoice.status === "overdue" && (
         <div className="bg-red-100 border border-red-300 text-red-700 p-4 rounded-xl mb-8">
-          ⚠ This invoice is overdue. Immediate action required.
+          This invoice is overdue. Immediate action required.
         </div>
       )}
 
@@ -300,3 +300,5 @@ const InvoiceDetail = () => {
 };
 
 export default InvoiceDetail;
+
+

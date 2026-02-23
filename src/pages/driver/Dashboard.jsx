@@ -95,7 +95,7 @@ const DriverDashboard = () => {
       {/* HEADER */}
       <div className="mb-8">
         <h1 className="text-2xl md:text-3xl font-bold">
-          🚚 Driver Dashboard
+          Driver Dashboard
         </h1>
         <p className="text-gray-500 mt-1">
           Welcome back,{" "}
@@ -141,7 +141,7 @@ const DriverDashboard = () => {
       </div>
 
       {/* TODAY'S ACTIVITY */}
-      <SectionCard title="📅 Today's Activity">
+      <SectionCard title="Today's Activity">
 
         {todayTrips.length === 0 &&
         todayOrders.length === 0 ? (
@@ -221,3 +221,5 @@ const ActivityCard = ({ label, value, color }) => {
 };
 
 export default DriverDashboard;
+
+

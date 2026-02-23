@@ -36,7 +36,7 @@ const AdminDashboard = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // ✅ TOKEN NO LONGER PASSED MANUALLY
+      //  TOKEN NO LONGER PASSED MANUALLY
       const o = await getOutstanding();
       const r = await getMonthlyRevenue(period);
       const c = await getContainerLoss();
@@ -56,7 +56,7 @@ const AdminDashboard = () => {
   /* ================= FORMATTERS ================= */
 
   const formatCurrency = (v) =>
-    `₹ ${Number(v || 0).toLocaleString("en-IN")}`;
+    `Rs. ${Number(v || 0).toLocaleString("en-IN")}`;
 
   const getContainerName = (id) =>
     containers.find((c) => c.id === id)?.name || `Container ${id}`;
@@ -242,7 +242,7 @@ const KpiCard = ({ title, value, growth, subtitle, color }) => {
             growth >= 0 ? "text-green-600" : "text-red-600"
           }`}
         >
-          {growth >= 0 ? "▲" : "▼"} {Math.abs(growth)}%
+          {growth >= 0 ? "+" : "-"} {Math.abs(growth)}%
         </p>
       )}
 
@@ -272,3 +272,4 @@ const EmptyState = ({ message }) => (
 );
 
 export default AdminDashboard;
+

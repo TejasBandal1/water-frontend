@@ -66,7 +66,7 @@ const Pricing = () => {
   };
 
   const formatCurrency = (value) =>
-    `₹ ${Number(value || 0).toLocaleString("en-IN")}`;
+    `Rs. ${Number(value || 0).toLocaleString("en-IN")}`;
 
   const formatDate = (date) => formatLocalDate(date);
 
@@ -284,7 +284,7 @@ const Pricing = () => {
 
           <input
             type="number"
-            placeholder="Price ₹"
+            placeholder="Price (Rs.)"
             value={form.price}
             onChange={(e) =>
               setForm({ ...form, price: e.target.value })
@@ -430,3 +430,5 @@ const SummaryCard = ({ title, value }) => (
 );
 
 export default Pricing;
+
+

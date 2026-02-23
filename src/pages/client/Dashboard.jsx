@@ -39,7 +39,7 @@ const Dashboard = () => {
   /* ================= FORMATTERS ================= */
 
   const formatCurrency = (value) =>
-    `₹ ${Number(value || 0).toLocaleString("en-IN")}`;
+    `Rs. ${Number(value || 0).toLocaleString("en-IN")}`;
 
   const formatDate = (date) => formatLocalDate(date);
 
@@ -99,17 +99,17 @@ const Dashboard = () => {
       {/* HEADER */}
       <div className="mb-8">
         <h1 className="text-2xl md:text-3xl font-bold">
-          👋 Welcome, {user?.name}
+          Welcome, {user?.name}
         </h1>
         <p className="text-gray-500 mt-1">
-          Here’s your billing and container summary
+          Here's your billing and container summary
         </p>
       </div>
 
       {/* OVERDUE ALERT */}
       {overdueAmount > 0 && (
         <div className="bg-red-100 border border-red-300 text-red-700 p-4 rounded-xl mb-8">
-          ⚠ You have overdue payments of{" "}
+          You have overdue payments of{" "}
           <strong>{formatCurrency(overdueAmount)}</strong>.
           Please clear them to avoid service interruption.
         </div>
@@ -144,7 +144,7 @@ const Dashboard = () => {
       </div>
 
       {/* INVOICE TABLE */}
-      <SectionCard title="🧾 My Invoices">
+      <SectionCard title="My Invoices">
 
         {invoices.length === 0 ? (
           <EmptyState message="No invoices available yet." />
@@ -216,7 +216,7 @@ const Dashboard = () => {
       </SectionCard>
 
       {/* CONTAINER BALANCE */}
-      <SectionCard title="📦 Container Balance">
+      <SectionCard title="Container Balance">
 
         {balance.length === 0 ? (
           <EmptyState message="No container balance data." />
@@ -315,3 +315,5 @@ const StatusBadge = ({ status }) => {
 };
 
 export default Dashboard;
+
+

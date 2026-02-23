@@ -164,7 +164,7 @@ const Containers = () => {
           onClick={() => setSortAsc(!sortAsc)}
           className="px-4 py-2 rounded-xl bg-gray-200 hover:bg-gray-300 text-sm"
         >
-          Sort {sortAsc ? "↓" : "↑"}
+          Sort {sortAsc ? "A-Z" : "Z-A"}
         </button>
       </div>
 
@@ -376,3 +376,5 @@ const StatusBadge = ({ active }) => (
 );
 
 export default Containers;
+
+

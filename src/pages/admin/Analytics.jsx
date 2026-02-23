@@ -36,7 +36,7 @@ const Analytics = () => {
     setLoading(true);
 
     try {
-      // ✅ TOKEN NOT PASSED ANYMORE
+      //  TOKEN NOT PASSED ANYMORE
       const outstandingRes = await getOutstanding();
 
       const revenueRes = await getMonthlyRevenue(
@@ -61,7 +61,7 @@ const Analytics = () => {
   };
 
   const formatCurrency = (value) =>
-    `₹ ${Number(value || 0).toLocaleString("en-IN")}`;
+    `Rs. ${Number(value || 0).toLocaleString("en-IN")}`;
 
   /* ================= CALCULATIONS ================= */
 
@@ -235,3 +235,4 @@ const EmptyState = ({ message }) => (
 );
 
 export default Analytics;
+
