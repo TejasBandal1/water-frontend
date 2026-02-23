@@ -16,6 +16,14 @@ import {
 
 const ITEMS_PER_PAGE = 8;
 
+const STATUS_STYLES = {
+  draft: "bg-amber-100 text-amber-700 ring-1 ring-amber-200",
+  pending: "bg-blue-100 text-blue-700 ring-1 ring-blue-200",
+  paid: "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200",
+  overdue: "bg-red-100 text-red-700 ring-1 ring-red-200",
+  cancelled: "bg-slate-200 text-slate-700 ring-1 ring-slate-300"
+};
+
 const Invoices = () => {
   const [invoices, setInvoices] = useState([]);
   const [clients, setClients] = useState([]);
@@ -95,7 +103,10 @@ const Invoices = () => {
       }
 
       if (actionModal.type === "void_reissue") {
-        const res = await voidReissueInvoice(actionModal.invoiceId, actionReason.trim());
+        const res = await voidReissueInvoice(
+          actionModal.invoiceId,
+          actionReason.trim()
+        );
         showToast(
           `Invoice #${res.old_invoice_id} voided. New draft #${res.new_invoice_id} created.`
         );
@@ -128,8 +139,7 @@ const Invoices = () => {
             inv.id.toString().includes(searchTerm)) &&
           (selectedClient === "all" ||
             inv.client_id === Number(selectedClient)) &&
-          (selectedStatus === "all" ||
-            inv.status === selectedStatus) &&
+          (selectedStatus === "all" || inv.status === selectedStatus) &&
           isWithinLocalDateRange(inv.created_at, fromDate, toDate)
         );
       })
@@ -161,18 +171,7 @@ const Invoices = () => {
   );
 
   const totalOutstanding = totalBilled - totalCollected;
-
-  const overdueCount = invoices.filter(
-    (inv) => inv.status === "overdue"
-  ).length;
-
-  const statusStyles = {
-    draft: "bg-yellow-100 text-yellow-800",
-    pending: "bg-blue-100 text-blue-800",
-    paid: "bg-green-100 text-green-800",
-    overdue: "bg-red-100 text-red-800",
-    cancelled: "bg-gray-200 text-gray-700"
-  };
+  const overdueCount = invoices.filter((inv) => inv.status === "overdue").length;
 
   const resetFilters = () => {
     setSearchTerm("");
@@ -185,114 +184,127 @@ const Invoices = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-6 sm:px-6 lg:px-10">
-      <div className="mb-8 flex flex-col items-start justify-between gap-6 lg:flex-row lg:items-center">
-        <div>
-          <h1 className="text-2xl font-bold sm:text-3xl">Invoice Management</h1>
-          <p className="text-sm text-gray-500">
-            Billing overview and tracking
-          </p>
+      <section className="mb-6 rounded-3xl border border-slate-200 bg-gradient-to-r from-slate-900 via-slate-800 to-blue-900 p-6 text-white shadow-xl sm:p-8">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-300">Billing</p>
+            <h1 className="mt-2 text-2xl font-bold sm:text-3xl">Invoice Management</h1>
+            <p className="mt-2 text-sm text-slate-200">Track draft, active, paid, and corrected invoices with full audit safety.</p>
+          </div>
+
+          <button
+            onClick={() =>
+              openActionModal({
+                type: "generate_all",
+                title: "Generate Draft Invoices",
+                message:
+                  "This creates draft invoices for all active clients with billable trips. Continue?",
+                confirmLabel: "Generate Drafts",
+                requiresReason: false
+              })
+            }
+            className="rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
+          >
+            Generate Drafts
+          </button>
         </div>
+      </section>
 
-        <button
-          onClick={() =>
-            openActionModal({
-              type: "generate_all",
-              title: "Generate Draft Invoices",
-              message:
-                "This will create draft invoices for all active clients where billable trips are available. Continue?",
-              confirmLabel: "Generate Drafts",
-              requiresReason: false
-            })
-          }
-          className="rounded-lg bg-black px-5 py-2 text-white transition hover:bg-gray-800"
-        >
-          Generate Drafts
-        </button>
-      </div>
+      <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <SummaryCard title="Total Billed" value={formatCurrency(totalBilled)} tone="slate" />
+        <SummaryCard title="Collected" value={formatCurrency(totalCollected)} tone="green" />
+        <SummaryCard title="Outstanding" value={formatCurrency(totalOutstanding)} tone="amber" />
+        <SummaryCard title="Overdue Invoices" value={overdueCount} tone="red" />
+      </section>
 
-      <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
-        <SummaryCard title="Total Billed" value={formatCurrency(totalBilled)} />
-        <SummaryCard title="Collected" value={formatCurrency(totalCollected)} />
-        <SummaryCard title="Outstanding" value={formatCurrency(totalOutstanding)} />
-        <SummaryCard title="Overdue" value={overdueCount} />
-      </div>
+      <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-6">
+          <FilterField label="Search">
+            <input
+              placeholder="Invoice ID or client"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+            />
+          </FilterField>
 
-      <div className="mb-6 grid grid-cols-1 gap-4 rounded-2xl border bg-white p-5 shadow-md md:grid-cols-6">
-        <input
-          placeholder="Search..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="rounded-lg border p-2 focus:ring-2 focus:ring-black"
-        />
+          <FilterField label="Client">
+            <select
+              value={selectedClient}
+              onChange={(e) => setSelectedClient(e.target.value)}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+            >
+              <option value="all">All Clients</option>
+              {clients.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </FilterField>
 
-        <select
-          value={selectedClient}
-          onChange={(e) => setSelectedClient(e.target.value)}
-          className="rounded-lg border p-2"
-        >
-          <option value="all">All Clients</option>
-          {clients.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+          <FilterField label="Status">
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+            >
+              <option value="all">All Status</option>
+              <option value="draft">Draft</option>
+              <option value="pending">Pending</option>
+              <option value="paid">Paid</option>
+              <option value="overdue">Overdue</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </FilterField>
 
-        <select
-          value={selectedStatus}
-          onChange={(e) => setSelectedStatus(e.target.value)}
-          className="rounded-lg border p-2"
-        >
-          <option value="all">All Status</option>
-          <option value="draft">Draft</option>
-          <option value="pending">Pending</option>
-          <option value="paid">Paid</option>
-          <option value="overdue">Overdue</option>
-          <option value="cancelled">Cancelled</option>
-        </select>
+          <FilterField label="From Date">
+            <input
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+            />
+          </FilterField>
 
-        <input
-          type="date"
-          value={fromDate}
-          onChange={(e) => setFromDate(e.target.value)}
-          className="rounded-lg border p-2"
-        />
+          <FilterField label="To Date">
+            <input
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+            />
+          </FilterField>
 
-        <input
-          type="date"
-          value={toDate}
-          onChange={(e) => setToDate(e.target.value)}
-          className="rounded-lg border p-2"
-        />
+          <FilterField label="Actions">
+            <button
+              onClick={resetFilters}
+              className="w-full rounded-lg bg-slate-100 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-200"
+            >
+              Reset Filters
+            </button>
+          </FilterField>
+        </div>
+      </section>
 
-        <button
-          onClick={resetFilters}
-          className="rounded-lg bg-gray-200 text-sm hover:bg-gray-300"
-        >
-          Reset
-        </button>
-      </div>
-
-      <div className="overflow-x-auto rounded-2xl border bg-white shadow-md">
+      <section className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
         {loading ? (
           <div className="flex justify-center py-20">
             <div className="h-10 w-10 animate-spin rounded-full border-4 border-black border-t-transparent"></div>
           </div>
         ) : paginatedInvoices.length === 0 ? (
-          <div className="py-20 text-center text-gray-400">
-            No invoices found
-          </div>
+          <div className="py-20 text-center text-slate-400">No invoices found for selected filters.</div>
         ) : (
           <table className="min-w-full text-left">
-            <thead className="sticky top-0 border-b bg-gray-100">
+            <thead className="sticky top-0 border-b border-slate-200 bg-slate-100/90 backdrop-blur">
               <tr>
-                <th className="p-4">Invoice</th>
-                <th className="p-4">Client</th>
-                <th className="p-4">Created</th>
-                <th className="p-4">Total</th>
-                <th className="p-4">Balance</th>
-                <th className="p-4">Status</th>
-                <th className="p-4">Actions</th>
+                <th className="px-4 py-3 text-xs uppercase tracking-wide text-slate-600">Invoice</th>
+                <th className="px-4 py-3 text-xs uppercase tracking-wide text-slate-600">Client</th>
+                <th className="px-4 py-3 text-xs uppercase tracking-wide text-slate-600">Created</th>
+                <th className="px-4 py-3 text-xs uppercase tracking-wide text-slate-600">Total</th>
+                <th className="px-4 py-3 text-xs uppercase tracking-wide text-slate-600">Balance</th>
+                <th className="px-4 py-3 text-xs uppercase tracking-wide text-slate-600">Status</th>
+                <th className="px-4 py-3 text-xs uppercase tracking-wide text-slate-600">Actions</th>
               </tr>
             </thead>
 
@@ -304,24 +316,24 @@ const Invoices = () => {
                   Number(inv.amount_paid || 0) === 0;
 
                 return (
-                  <tr key={inv.id} className="border-b transition hover:bg-gray-50">
-                    <td className="p-4 font-semibold">#{inv.id}</td>
-                    <td className="p-4">{inv.client_name}</td>
-                    <td className="p-4">{formatDate(inv.created_at)}</td>
-                    <td className="p-4">{formatCurrency(inv.total_amount)}</td>
-                    <td className={`p-4 font-bold ${balance > 0 ? "text-red-600" : "text-green-600"}`}>
+                  <tr key={inv.id} className="border-b border-slate-100 transition hover:bg-slate-50">
+                    <td className="px-4 py-3 font-semibold text-slate-900">#{inv.id}</td>
+                    <td className="px-4 py-3 text-slate-700">{inv.client_name}</td>
+                    <td className="px-4 py-3 text-slate-600">{formatDate(inv.created_at)}</td>
+                    <td className="px-4 py-3 font-semibold text-slate-800">{formatCurrency(inv.total_amount)}</td>
+                    <td className={`px-4 py-3 font-semibold ${balance > 0 ? "text-red-600" : "text-emerald-600"}`}>
                       {formatCurrency(balance)}
                     </td>
-                    <td className="p-4">
-                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[inv.status]}`}>
+                    <td className="px-4 py-3">
+                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS_STYLES[inv.status] || "bg-slate-100 text-slate-700"}`}>
                         {inv.status.toUpperCase()}
                       </span>
                     </td>
-                    <td className="p-4">
+                    <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-2">
                         <Link
                           to={`/admin/invoices/${inv.id}`}
-                          className="rounded-lg bg-blue-600 px-3 py-1 text-xs text-white"
+                          className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-blue-700"
                         >
                           View
                         </Link>
@@ -334,12 +346,12 @@ const Invoices = () => {
                                 invoiceId: inv.id,
                                 title: `Confirm Invoice #${inv.id}`,
                                 message:
-                                  "After confirmation, this invoice becomes active and due date will be assigned. Continue?",
+                                  "This will lock draft values and set invoice due date. Continue?",
                                 confirmLabel: "Confirm Invoice",
                                 requiresReason: false
                               })
                             }
-                            className="rounded-lg bg-green-600 px-3 py-1 text-xs text-white"
+                            className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700"
                           >
                             Confirm
                           </button>
@@ -351,14 +363,14 @@ const Invoices = () => {
                               openActionModal({
                                 type: "void_reissue",
                                 invoiceId: inv.id,
-                                title: `Void and Reissue Invoice #${inv.id}`,
+                                title: `Void and Reissue #${inv.id}`,
                                 message:
-                                  "This will cancel the current invoice and generate a corrected draft using latest pricing. Provide a reason.",
+                                  "Old invoice will be cancelled and a corrected draft will be generated using latest pricing.",
                                 confirmLabel: "Void and Reissue",
                                 requiresReason: true
                               })
                             }
-                            className="rounded-lg bg-amber-600 px-3 py-1 text-xs text-white"
+                            className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-amber-700"
                           >
                             Void & Reissue
                           </button>
@@ -372,12 +384,12 @@ const Invoices = () => {
                                 invoiceId: inv.id,
                                 title: `Cancel Invoice #${inv.id}`,
                                 message:
-                                  "This will cancel the invoice without creating a new one. Provide a reason.",
+                                  "This will cancel the invoice without reissuing. Provide reason for audit.",
                                 confirmLabel: "Cancel Invoice",
                                 requiresReason: true
                               })
                             }
-                            className="rounded-lg bg-gray-600 px-3 py-1 text-xs text-white"
+                            className="rounded-lg bg-slate-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-700"
                           >
                             Cancel
                           </button>
@@ -390,7 +402,7 @@ const Invoices = () => {
             </tbody>
           </table>
         )}
-      </div>
+      </section>
 
       {totalPages > 1 && (
         <div className="mt-6 flex justify-center gap-2">
@@ -398,10 +410,10 @@ const Invoices = () => {
             <button
               key={i}
               onClick={() => setCurrentPage(i + 1)}
-              className={`rounded-lg px-3 py-1 ${
+              className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
                 currentPage === i + 1
-                  ? "bg-black text-white"
-                  : "bg-gray-200"
+                  ? "bg-slate-900 text-white"
+                  : "bg-slate-200 text-slate-700"
               }`}
             >
               {i + 1}
@@ -425,7 +437,7 @@ const Invoices = () => {
       )}
 
       {toast && (
-        <div className="fixed bottom-6 right-6 rounded-xl bg-black px-6 py-3 text-white shadow-lg">
+        <div className="fixed bottom-6 right-6 rounded-xl bg-slate-900 px-6 py-3 text-white shadow-xl">
           {toast}
         </div>
       )}
@@ -433,10 +445,26 @@ const Invoices = () => {
   );
 };
 
-const SummaryCard = ({ title, value }) => (
-  <div className="rounded-2xl border bg-white p-6 shadow-md transition hover:shadow-lg">
-    <h3 className="text-sm text-gray-500">{title}</h3>
-    <h2 className="mt-2 text-2xl font-bold">{value}</h2>
+const SummaryCard = ({ title, value, tone }) => {
+  const toneStyles = {
+    slate: "text-slate-900",
+    green: "text-emerald-700",
+    amber: "text-amber-700",
+    red: "text-red-700"
+  };
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</p>
+      <p className={`mt-2 text-2xl font-bold ${toneStyles[tone] || "text-slate-900"}`}>{value}</p>
+    </div>
+  );
+};
+
+const FilterField = ({ label, children }) => (
+  <div>
+    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</label>
+    {children}
   </div>
 );
 
@@ -452,13 +480,13 @@ const ActionModal = ({
   onConfirm
 }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-    <div className="w-full max-w-lg rounded-2xl border bg-white p-6 shadow-2xl">
-      <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-      <p className="mt-2 text-sm text-gray-600">{message}</p>
+    <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+      <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
+      <p className="mt-2 text-sm text-slate-600">{message}</p>
 
       {requiresReason && (
         <div className="mt-4">
-          <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-gray-500">
+          <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
             Reason
           </label>
           <textarea
@@ -466,7 +494,7 @@ const ActionModal = ({
             value={reason}
             onChange={(e) => onReasonChange(e.target.value)}
             placeholder="Enter reason for audit history"
-            className="w-full rounded-xl border border-gray-300 p-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+            className="w-full rounded-xl border border-slate-300 p-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
           />
         </div>
       )}
@@ -475,14 +503,14 @@ const ActionModal = ({
         <button
           onClick={onClose}
           disabled={loading}
-          className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed"
+          className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed"
         >
           Close
         </button>
         <button
           onClick={onConfirm}
           disabled={loading || (requiresReason && reason.trim().length < 3)}
-          className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-400"
+          className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
         >
           {loading ? "Processing..." : confirmLabel}
         </button>
