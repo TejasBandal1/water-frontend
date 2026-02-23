@@ -5,7 +5,7 @@ const Topbar = ({ toggleSidebar, toggleCollapse, collapsed }) => {
   const { user, logout } = useContext(AuthContext);
 
   return (
-    <div className="h-16 bg-white shadow-sm flex items-center justify-between px-4 md:px-8">
+    <div className="relative z-50 h-16 bg-white shadow-sm flex items-center justify-between px-4 md:px-8">
 
       {/* LEFT */}
       <div className="flex items-center gap-4">

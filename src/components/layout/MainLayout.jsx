@@ -22,13 +22,16 @@ const MainLayout = () => {
           md:translate-x-0 md:static
         `}
       >
-        <Sidebar collapsed={collapsed} />
+        <Sidebar
+          collapsed={collapsed}
+          onNavigate={() => setSidebarOpen(false)}
+        />
       </div>
 
       {/* Overlay (Mobile) */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -37,8 +40,8 @@ const MainLayout = () => {
       <div className="flex-1 flex flex-col">
 
         <Topbar
-          toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-          toggleCollapse={() => setCollapsed(!collapsed)}
+          toggleSidebar={() => setSidebarOpen((prev) => !prev)}
+          toggleCollapse={() => setCollapsed((prev) => !prev)}
           collapsed={collapsed}
         />
 

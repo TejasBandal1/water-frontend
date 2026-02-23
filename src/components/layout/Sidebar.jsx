@@ -2,7 +2,7 @@ import { NavLink } from "react-router-dom";
 import { useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
 
-const Sidebar = ({ collapsed }) => {
+const Sidebar = ({ collapsed, onNavigate }) => {
   const { user } = useContext(AuthContext);
 
   if (!user) return null;
@@ -19,7 +19,7 @@ const Sidebar = ({ collapsed }) => {
   `;
 
   const NavItem = ({ to, icon, label }) => (
-    <NavLink to={to} end className={linkClasses}>
+    <NavLink to={to} end className={linkClasses} onClick={onNavigate}>
       <span className="text-lg">{icon}</span>
       {!collapsed && <span>{label}</span>}
     </NavLink>
