@@ -196,17 +196,13 @@ const Pricing = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 md:px-10 py-6">
+    <div className="page-shell">
 
-      {/* HEADER */}
-      <div className="mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold">
-          Price Management
-        </h1>
-        <p className="text-gray-500 text-sm">
-          Manage client-specific pricing rules
-        </p>
-      </div>
+      <section className="page-hero">
+        <p className="page-eyebrow">Billing Rules</p>
+        <h1 className="page-title">Price Management</h1>
+        <p className="page-subtitle">Manage client-specific pricing with clear version history and active status.</p>
+      </section>
 
       {/* SUMMARY */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
@@ -216,11 +212,11 @@ const Pricing = () => {
       </div>
 
       {/* FILTER BAR */}
-      <div className="bg-white p-4 rounded-2xl shadow mb-6 flex flex-wrap gap-4 items-center border">
+      <div className="panel mb-6 flex flex-wrap items-center gap-4 p-4">
         <select
           value={selectedClientFilter}
           onChange={(e) => setSelectedClientFilter(e.target.value)}
-          className="p-2 border rounded-lg"
+          className="form-select"
         >
           <option value="">All Clients</option>
           {clients.map((c) => (
@@ -234,20 +230,20 @@ const Pricing = () => {
           placeholder="Search..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="p-2 border rounded-lg flex-1 min-w-[200px]"
+          className="form-input min-w-[200px] flex-1"
         />
 
         <button
           onClick={resetFilters}
-          className="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg text-sm"
+          className="btn-secondary"
         >
           Reset
         </button>
       </div>
 
       {/* CREATE PRICE */}
-      <div className="bg-white p-6 rounded-2xl shadow mb-10 border">
-        <h2 className="text-lg font-semibold mb-4">
+      <div className="panel mb-10 p-6">
+        <h2 className="section-title mb-4">
           Create / Update Price Rule
         </h2>
 
@@ -257,7 +253,7 @@ const Pricing = () => {
             onChange={(e) =>
               setForm({ ...form, client_id: e.target.value })
             }
-            className="p-2 border rounded-lg"
+            className="form-select"
           >
             <option value="">Select Client</option>
             {clients.map((c) => (
@@ -272,7 +268,7 @@ const Pricing = () => {
             onChange={(e) =>
               setForm({ ...form, container_id: e.target.value })
             }
-            className="p-2 border rounded-lg"
+            className="form-select"
           >
             <option value="">Select Container</option>
             {containers.map((c) => (
@@ -289,13 +285,13 @@ const Pricing = () => {
             onChange={(e) =>
               setForm({ ...form, price: e.target.value })
             }
-            className="p-2 border rounded-lg"
+            className="form-input"
           />
 
           <button
             onClick={handleSubmit}
             disabled={saving}
-            className="bg-black text-white rounded-lg px-4 py-2 disabled:bg-gray-400"
+            className="btn-primary"
           >
             {saving ? "Saving..." : "Save"}
           </button>
@@ -303,16 +299,16 @@ const Pricing = () => {
       </div>
 
       {/* TABLE */}
-      <div className="bg-white rounded-2xl shadow border overflow-x-auto">
-        <table className="w-full text-left min-w-[700px]">
-          <thead className="bg-gray-100 border-b">
+      <div className="table-shell">
+        <table className="table-main min-w-[700px]">
+          <thead>
             <tr>
-              <th className="p-4">Client</th>
-              <th className="p-4">Container</th>
-              <th className="p-4">Price</th>
-              <th className="p-4">Effective</th>
-              <th className="p-4">Status</th>
-              <th className="p-4">History</th>
+              <th>Client</th>
+              <th>Container</th>
+              <th>Price</th>
+              <th>Effective</th>
+              <th>Status</th>
+              <th>History</th>
             </tr>
           </thead>
 
@@ -320,30 +316,30 @@ const Pricing = () => {
             {paginatedPrices.map((p) => (
               <tr
                 key={p.id}
-                className={`border-b hover:bg-gray-50 ${
+                className={`${
                   isLatest(p) ? "bg-green-50" : ""
                 }`}
               >
-                <td className="p-4">{getClientName(p.client_id)}</td>
-                <td className="p-4">{getContainerName(p.container_id)}</td>
-                <td className="p-4 font-semibold">
+                <td>{getClientName(p.client_id)}</td>
+                <td>{getContainerName(p.container_id)}</td>
+                <td className="font-semibold text-slate-900">
                   {formatCurrency(p.price)}
                 </td>
-                <td className="p-4">
+                <td>
                   {formatDate(p.effective_from)}
                 </td>
-                <td className="p-4">
+                <td>
                   {isLatest(p) ? (
-                    <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs">
+                    <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs text-emerald-700">
                       Active
                     </span>
                   ) : (
-                    <span className="bg-gray-200 text-gray-600 px-3 py-1 rounded-full text-xs">
+                    <span className="rounded-full bg-slate-200 px-3 py-1 text-xs text-slate-600">
                       Archived
                     </span>
                   )}
                 </td>
-                <td className="p-4">
+                <td>
                   <button
                     onClick={() =>
                       setHistoryModal(
@@ -352,7 +348,7 @@ const Pricing = () => {
                         ] || []
                       )
                     }
-                    className="text-blue-600 hover:underline"
+                    className="text-sm font-semibold text-blue-700 hover:underline"
                   >
                     View
                   </button>
@@ -370,10 +366,10 @@ const Pricing = () => {
             <button
               key={i}
               onClick={() => setCurrentPage(i + 1)}
-              className={`px-3 py-1 rounded-lg ${
+              className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
                 currentPage === i + 1
-                  ? "bg-black text-white"
-                  : "bg-gray-200"
+                  ? "bg-slate-900 text-white"
+                  : "bg-slate-200 text-slate-700"
               }`}
             >
               {i + 1}
@@ -385,15 +381,15 @@ const Pricing = () => {
       {/* MODAL */}
       {historyModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto shadow-xl">
-            <h3 className="text-lg font-semibold mb-4">
+          <div className="panel max-h-[80vh] w-full max-w-md overflow-y-auto p-6 shadow-xl">
+            <h3 className="section-title mb-4">
               Price History
             </h3>
 
             {historyModal.map((h) => (
               <div
                 key={h.id}
-                className="flex justify-between py-2 border-b"
+                className="flex justify-between border-b border-slate-200 py-2"
               >
                 <span className="font-semibold">
                   {formatCurrency(h.price)}
@@ -404,7 +400,7 @@ const Pricing = () => {
 
             <button
               onClick={() => setHistoryModal(null)}
-              className="mt-4 w-full bg-black text-white py-2 rounded-lg"
+              className="btn-primary mt-4 w-full"
             >
               Close
             </button>
@@ -414,7 +410,7 @@ const Pricing = () => {
 
       {/* TOAST */}
       {toast && (
-        <div className="fixed bottom-6 right-6 bg-black text-white px-6 py-3 rounded-xl shadow-lg">
+        <div className="toast">
           {toast}
         </div>
       )}
@@ -423,9 +419,9 @@ const Pricing = () => {
 };
 
 const SummaryCard = ({ title, value }) => (
-  <div className="bg-white p-6 rounded-2xl shadow-md border hover:shadow-lg transition">
-    <h3 className="text-gray-500 text-sm">{title}</h3>
-    <h2 className="text-2xl font-bold mt-2">{value}</h2>
+  <div className="stat-card">
+    <h3 className="stat-label">{title}</h3>
+    <h2 className="stat-value">{value}</h2>
   </div>
 );
 

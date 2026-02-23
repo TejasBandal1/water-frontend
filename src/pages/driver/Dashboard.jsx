@@ -90,20 +90,15 @@ const DriverDashboard = () => {
   }
 
   return (
-    <div className="p-6 md:p-10 bg-gray-50 min-h-screen">
+    <div className="page-shell">
 
-      {/* HEADER */}
-      <div className="mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold">
-          Driver Dashboard
-        </h1>
-        <p className="text-gray-500 mt-1">
-          Welcome back,{" "}
-          <span className="font-semibold">
-            {user?.name}
-          </span>
+      <section className="page-hero">
+        <p className="page-eyebrow">Operations</p>
+        <h1 className="page-title">Driver Dashboard</h1>
+        <p className="page-subtitle">
+          Welcome back, <span className="font-semibold text-white">{user?.name}</span>. Track your trips and daily activity.
         </p>
-      </div>
+      </section>
 
       {/* SUMMARY CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
@@ -134,7 +129,7 @@ const DriverDashboard = () => {
       <div className="mb-10">
         <Link
           to="/driver/trip"
-          className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl shadow transition"
+          className="btn-primary inline-flex items-center gap-2 px-6 py-3"
         >
           + Start New Trip
         </Link>
@@ -179,43 +174,43 @@ const DriverDashboard = () => {
 /* ================= COMPONENTS ================= */
 
 const SectionCard = ({ title, children }) => (
-  <div className="bg-white rounded-2xl shadow">
-    <div className="p-6 border-b">
-      <h2 className="text-lg font-semibold">{title}</h2>
+  <div className="panel">
+    <div className="panel-header">
+      <h2 className="section-title">{title}</h2>
     </div>
-    <div className="p-6">{children}</div>
+    <div className="panel-body">{children}</div>
   </div>
 );
 
 const EmptyState = ({ message }) => (
-  <div className="text-center py-12 text-gray-400">
+  <div className="empty-state">
     {message}
   </div>
 );
 
 const SummaryCard = ({ title, value }) => (
-  <div className="bg-white p-6 rounded-2xl shadow hover:shadow-lg transition">
-    <h3 className="text-gray-500 text-sm">{title}</h3>
-    <h2 className="text-2xl font-bold mt-3">{value}</h2>
+  <div className="stat-card">
+    <h3 className="stat-label">{title}</h3>
+    <h2 className="mt-3 text-2xl font-bold text-slate-900">{value}</h2>
   </div>
 );
 
 const ActivityCard = ({ label, value, color }) => {
   const colorMap = {
     blue: "bg-blue-100 text-blue-700",
-    green: "bg-green-100 text-green-700",
-    orange: "bg-orange-100 text-orange-700"
+    green: "bg-emerald-100 text-emerald-700",
+    orange: "bg-amber-100 text-amber-700"
   };
 
   return (
-    <div className="bg-gray-50 p-6 rounded-xl hover:shadow-md transition">
+    <div className="rounded-xl bg-slate-50 p-6 ring-1 ring-slate-200 transition hover:shadow-md">
       <div
         className={`inline-block px-3 py-1 rounded-full text-xs font-semibold mb-3 ${colorMap[color]}`}
       >
         Today
       </div>
-      <h3 className="text-gray-600 text-sm">{label}</h3>
-      <h2 className="text-2xl font-bold mt-2">{value}</h2>
+      <h3 className="text-sm text-slate-600">{label}</h3>
+      <h2 className="mt-2 text-2xl font-bold text-slate-900">{value}</h2>
     </div>
   );
 };

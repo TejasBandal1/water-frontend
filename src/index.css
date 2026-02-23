@@ -1,9 +1,17 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
 
 :root {
   color-scheme: light;
-  --rr-surface: #f8fafc;
+  --rr-bg: #f3f5f9;
+  --rr-surface: #ffffff;
+  --rr-surface-soft: #f8fafc;
+  --rr-border: #e2e8f0;
   --rr-text: #0f172a;
+  --rr-muted: #64748b;
+  --rr-primary: #0f172a;
+  --rr-accent: #2563eb;
+  --rr-shadow: 0 10px 28px rgba(2, 6, 23, 0.08);
 }
 
 html,
@@ -17,11 +25,123 @@ body {
   font-family: "Manrope", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   color: var(--rr-text);
   background:
-    radial-gradient(circle at 0% 0%, #e2e8f0 0%, rgba(226, 232, 240, 0) 46%),
-    radial-gradient(circle at 100% 100%, #cbd5e1 0%, rgba(203, 213, 225, 0) 42%),
-    var(--rr-surface);
+    radial-gradient(circle at 0% 0%, #dbe4f2 0%, rgba(219, 228, 242, 0) 48%),
+    radial-gradient(circle at 100% 100%, #c8d4e8 0%, rgba(200, 212, 232, 0) 44%),
+    var(--rr-bg);
 }
 
 * {
   box-sizing: border-box;
+}
+
+.page-shell {
+  @apply min-h-screen px-4 py-6 sm:px-6 lg:px-10;
+}
+
+.page-hero {
+  @apply mb-6 rounded-3xl border border-slate-200 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 p-6 text-white shadow-xl sm:p-8;
+}
+
+.page-eyebrow {
+  @apply text-xs uppercase tracking-[0.2em] text-slate-300;
+}
+
+.page-title {
+  @apply mt-2 text-2xl font-bold sm:text-3xl;
+}
+
+.page-subtitle {
+  @apply mt-2 text-sm text-slate-200;
+}
+
+.panel {
+  @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+}
+
+.panel-header {
+  @apply border-b border-slate-200 px-5 py-4;
+}
+
+.panel-body {
+  @apply p-5;
+}
+
+.section-title {
+  @apply text-base font-semibold text-slate-900;
+}
+
+.section-subtitle {
+  @apply mt-1 text-sm text-slate-500;
+}
+
+.stat-card {
+  @apply rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md;
+}
+
+.stat-label {
+  @apply text-xs font-semibold uppercase tracking-wide text-slate-500;
+}
+
+.stat-value {
+  @apply mt-2 text-2xl font-bold text-slate-900;
+}
+
+.form-label {
+  @apply mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500;
+}
+
+.form-input {
+  @apply w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200;
+}
+
+.form-select {
+  @apply w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200;
+}
+
+.form-textarea {
+  @apply w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200;
+}
+
+.btn-primary {
+  @apply rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400;
+}
+
+.btn-secondary {
+  @apply rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60;
+}
+
+.btn-danger {
+  @apply rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-red-300;
+}
+
+.table-shell {
+  @apply overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm;
+}
+
+.table-main {
+  @apply min-w-full text-left;
+}
+
+.table-main thead tr {
+  @apply border-b border-slate-200 bg-slate-100;
+}
+
+.table-main th {
+  @apply px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-600;
+}
+
+.table-main td {
+  @apply px-4 py-3 text-sm text-slate-700;
+}
+
+.table-main tbody tr {
+  @apply border-b border-slate-100 transition hover:bg-slate-50;
+}
+
+.empty-state {
+  @apply py-16 text-center text-sm text-slate-400;
+}
+
+.toast {
+  @apply fixed bottom-6 right-6 rounded-xl bg-slate-900 px-6 py-3 text-sm text-white shadow-xl;
 }

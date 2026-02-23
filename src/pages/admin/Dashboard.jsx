@@ -100,30 +100,29 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 sm:px-6 lg:px-10 py-6">
+    <div className="page-shell">
 
       {/* HEADER */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-10">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
-            Business Performance Dashboard
-          </h1>
-          <p className="text-gray-500 text-sm sm:text-base mt-1">
-            Financial and operational overview
-          </p>
-        </div>
+      <section className="page-hero">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="page-eyebrow">Overview</p>
+            <h1 className="page-title">Business Performance Dashboard</h1>
+            <p className="page-subtitle">Financial and operational overview for daily decision-making.</p>
+          </div>
 
-        <select
-          value={period}
-          onChange={(e) => setPeriod(e.target.value)}
-          className="px-4 py-2 border rounded-lg bg-white shadow-sm text-sm focus:ring-2 focus:ring-black"
-        >
-          <option value="daily">Daily</option>
-          <option value="weekly">Weekly</option>
-          <option value="monthly">Monthly</option>
-          <option value="yearly">Yearly</option>
-        </select>
-      </div>
+          <select
+            value={period}
+            onChange={(e) => setPeriod(e.target.value)}
+            className="form-select w-full bg-white text-slate-800 sm:w-56"
+          >
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+            <option value="yearly">Yearly</option>
+          </select>
+        </div>
+      </section>
 
       {/* KPI SECTION */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-12">
@@ -227,9 +226,9 @@ const KpiCard = ({ title, value, growth, subtitle, color }) => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100">
-      <h3 className="text-gray-500 text-sm">{title}</h3>
-      <h2 className={`text-2xl font-bold mt-2 ${colorMap[color]}`}>
+    <div className="stat-card">
+      <h3 className="stat-label">{title}</h3>
+      <h2 className={`mt-2 text-2xl font-bold ${colorMap[color]}`}>
         {value}
       </h2>
 
@@ -244,26 +243,26 @@ const KpiCard = ({ title, value, growth, subtitle, color }) => {
       )}
 
       {subtitle && (
-        <p className="text-gray-500 text-sm mt-2">{subtitle}</p>
+        <p className="mt-2 text-sm text-slate-500">{subtitle}</p>
       )}
     </div>
   );
 };
 
 const ChartCard = ({ title, subtitle, children }) => (
-  <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100">
-    <h2 className="text-lg font-semibold text-gray-800">
+  <div className="panel p-6">
+    <h2 className="text-lg font-semibold text-slate-800">
       {title}
     </h2>
     {subtitle && (
-      <p className="text-sm text-gray-500 mb-4">{subtitle}</p>
+      <p className="mb-4 text-sm text-slate-500">{subtitle}</p>
     )}
     {children}
   </div>
 );
 
 const EmptyState = ({ message }) => (
-  <div className="flex items-center justify-center h-60 text-gray-400 text-sm">
+  <div className="flex h-60 items-center justify-center text-sm text-slate-400">
     {message}
   </div>
 );

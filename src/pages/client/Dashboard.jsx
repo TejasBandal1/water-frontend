@@ -94,21 +94,18 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="p-6 md:p-10 bg-gray-50 min-h-screen">
+    <div className="page-shell">
 
       {/* HEADER */}
-      <div className="mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold">
-          Welcome, {user?.name}
-        </h1>
-        <p className="text-gray-500 mt-1">
-          Here's your billing and container summary
-        </p>
-      </div>
+      <section className="page-hero">
+        <p className="page-eyebrow">Client Portal</p>
+        <h1 className="page-title">Welcome, {user?.name}</h1>
+        <p className="page-subtitle">Track invoice status, outstanding balance, and container counts in one clean view.</p>
+      </section>
 
       {/* OVERDUE ALERT */}
       {overdueAmount > 0 && (
-        <div className="bg-red-100 border border-red-300 text-red-700 p-4 rounded-xl mb-8">
+        <div className="mb-8 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
           You have overdue payments of{" "}
           <strong>{formatCurrency(overdueAmount)}</strong>.
           Please clear them to avoid service interruption.
@@ -264,16 +261,16 @@ const Dashboard = () => {
 /* ================= COMPONENTS ================= */
 
 const SectionCard = ({ title, children }) => (
-  <div className="bg-white rounded-2xl shadow mb-10">
-    <div className="p-6 border-b">
-      <h2 className="text-lg font-semibold">{title}</h2>
+  <div className="panel mb-10">
+    <div className="panel-header">
+      <h2 className="section-title">{title}</h2>
     </div>
-    <div className="p-6">{children}</div>
+    <div className="panel-body">{children}</div>
   </div>
 );
 
 const EmptyState = ({ message }) => (
-  <div className="text-center py-12 text-gray-400">
+  <div className="empty-state">
     {message}
   </div>
 );
@@ -286,9 +283,9 @@ const SummaryCard = ({ title, value, danger, success, warning }) => {
   if (warning) color = "text-yellow-600";
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow hover:shadow-lg transition">
-      <h3 className="text-gray-500 text-sm">{title}</h3>
-      <h2 className={`text-2xl font-bold mt-2 ${color}`}>
+    <div className="stat-card">
+      <h3 className="stat-label">{title}</h3>
+      <h2 className={`mt-2 text-2xl font-bold ${color}`}>
         {value}
       </h2>
     </div>

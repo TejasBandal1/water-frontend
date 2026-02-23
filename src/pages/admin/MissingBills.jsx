@@ -158,28 +158,25 @@ const MissingBills = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-6 sm:px-6 lg:px-10">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
-          Missing Bills Entry
-        </h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Add a delivery bill on behalf of driver when a trip was missed.
-        </p>
-      </div>
+    <div className="page-shell">
+      <section className="page-hero">
+        <p className="page-eyebrow">Recovery</p>
+        <h1 className="page-title">Missing Bills Entry</h1>
+        <p className="page-subtitle">Create a delivery bill on behalf of a driver when a trip was missed.</p>
+      </section>
 
-      <div className="mb-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-base font-semibold text-slate-900">Bill Details</h2>
+      <div className="panel mb-8 p-6">
+        <h2 className="section-title">Bill Details</h2>
 
         <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           <div>
-            <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <label className="form-label">
               Client
             </label>
             <select
               value={clientId}
               onChange={(e) => setClientId(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              className="form-select"
             >
               <option value="">Select client</option>
               {clients.map((c) => (
@@ -191,13 +188,13 @@ const MissingBills = () => {
           </div>
 
           <div>
-            <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <label className="form-label">
               Driver
             </label>
             <select
               value={driverId}
               onChange={(e) => setDriverId(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              className="form-select"
             >
               <option value="">Select driver</option>
               {drivers.map((d) => (
@@ -209,19 +206,19 @@ const MissingBills = () => {
           </div>
 
           <div>
-            <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <label className="form-label">
               Bill Date & Time
             </label>
             <input
               type="datetime-local"
               value={billDateTime}
               onChange={(e) => setBillDateTime(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              className="form-input"
             />
           </div>
 
           <div>
-            <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <label className="form-label">
               Admin Notes / Comments
             </label>
             <input
@@ -229,18 +226,18 @@ const MissingBills = () => {
               value={comments}
               onChange={(e) => setComments(e.target.value)}
               placeholder="Reason or context"
-              className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              className="form-input"
             />
           </div>
         </div>
       </div>
 
-      <div className="mb-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="panel mb-8 p-6">
         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-base font-semibold text-slate-900">Container Quantities</h2>
+          <h2 className="section-title">Container Quantities</h2>
           <div className="flex gap-6 text-sm">
-            <span className="font-medium text-blue-700">Delivered: {totalDelivered}</span>
-            <span className="font-medium text-emerald-700">Returned: {totalReturned}</span>
+            <span className="font-medium text-emerald-700">Delivered: {totalDelivered}</span>
+            <span className="font-medium text-amber-700">Returned: {totalReturned}</span>
           </div>
         </div>
 
@@ -260,7 +257,7 @@ const MissingBills = () => {
                     min="0"
                     value={quantities[index]?.delivered_qty || 0}
                     onChange={(e) => setQty(index, "delivered_qty", e.target.value)}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    className="form-input"
                   />
                 </div>
                 <div>
@@ -270,7 +267,7 @@ const MissingBills = () => {
                     min="0"
                     value={quantities[index]?.returned_qty || 0}
                     onChange={(e) => setQty(index, "returned_qty", e.target.value)}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
+                    className="form-input"
                   />
                 </div>
               </div>
@@ -283,7 +280,7 @@ const MissingBills = () => {
         <button
           onClick={handleSubmit}
           disabled={submitting || !hasAnyQty}
-          className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+          className="btn-primary px-6 py-3"
         >
           {submitting ? "Saving..." : "Add Missing Bill"}
         </button>
@@ -291,14 +288,14 @@ const MissingBills = () => {
         <button
           onClick={resetForm}
           type="button"
-          className="rounded-xl border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+          className="btn-secondary px-6 py-3"
         >
           Reset
         </button>
       </div>
 
       {toast && (
-        <div className="fixed bottom-6 right-6 rounded-xl bg-black px-6 py-3 text-sm text-white shadow-lg">
+        <div className="toast">
           {toast}
         </div>
       )}

@@ -148,22 +148,19 @@ const Trip = () => {
     );
 
   return (
-    <div className="p-4 md:p-8 bg-gray-100 min-h-screen">
+    <div className="page-shell">
 
       {/* ================= HEADER ================= */}
-      <div className="mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold">
-          Record New Trip
-        </h1>
-        <p className="text-gray-500 text-sm">
-          Log container deliveries and returns
-        </p>
-      </div>
+      <section className="page-hero">
+        <p className="page-eyebrow">Trip Entry</p>
+        <h1 className="page-title">Record New Trip</h1>
+        <p className="page-subtitle">Search a client, capture delivered and returned containers, and submit clean logs fast.</p>
+      </section>
 
       {/* ================= CLIENT SECTION ================= */}
-      <div className="bg-white p-6 rounded-2xl shadow mb-8">
+      <div className="panel mb-8 p-6">
 
-        <label className="block text-sm font-medium mb-3">
+        <label className="form-label">
           Search and Select Client
         </label>
 
@@ -187,7 +184,7 @@ const Trip = () => {
                 setSelectedClient("");
               }
             }}
-            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 pr-20 text-sm shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+            className="form-input w-full bg-white pr-20"
           />
 
           {clientSearch && (
@@ -198,16 +195,16 @@ const Trip = () => {
                 setSelectedClient("");
                 setShowClientResults(false);
               }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-200"
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-200"
             >
               Clear
             </button>
           )}
 
           {showClientResults && (
-            <div className="absolute z-20 mt-2 max-h-72 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg">
+            <div className="absolute z-20 mt-2 max-h-72 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg">
               {filteredClients.length === 0 ? (
-                <p className="px-4 py-3 text-sm text-gray-500">
+                <p className="px-4 py-3 text-sm text-slate-500">
                   No clients found.
                 </p>
               ) : (
@@ -216,12 +213,12 @@ const Trip = () => {
                     key={client.id}
                     type="button"
                     onMouseDown={() => selectClient(client)}
-                    className="block w-full border-b border-gray-100 px-4 py-3 text-left last:border-b-0 hover:bg-blue-50"
+                    className="block w-full border-b border-slate-100 px-4 py-3 text-left last:border-b-0 hover:bg-slate-50"
                   >
-                    <p className="text-sm font-semibold text-gray-900">
+                    <p className="text-sm font-semibold text-slate-900">
                       {client.name}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-slate-500">
                       {formatClientLocation(client)}
                     </p>
                   </button>
@@ -232,15 +229,15 @@ const Trip = () => {
         </div>
 
         {selectedClientDetails && (
-          <div className="mt-4 flex flex-col gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-4 flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">
                 Selected Client
               </p>
-              <p className="text-sm font-semibold text-gray-900">
+              <p className="text-sm font-semibold text-slate-900">
                 {selectedClientDetails.name}
               </p>
-              <p className="text-xs text-gray-600">
+              <p className="text-xs text-slate-600">
                 {formatClientLocation(selectedClientDetails)}
               </p>
             </div>
@@ -250,7 +247,7 @@ const Trip = () => {
                 setSelectedClient("");
                 setClientSearch("");
               }}
-              className="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-gray-700 shadow-sm ring-1 ring-gray-200 hover:bg-gray-50"
+              className="btn-secondary px-3 py-2 text-xs"
             >
               Change Client
             </button>
@@ -260,22 +257,22 @@ const Trip = () => {
       </div>
 
       {/* ================= SUMMARY BAR ================= */}
-      <div className="bg-white p-4 rounded-2xl shadow mb-8 flex flex-wrap gap-6 justify-between">
+      <div className="panel mb-8 flex flex-wrap justify-between gap-6 p-4">
 
         <div>
-          <span className="text-gray-500 text-sm">
+          <span className="text-sm text-slate-500">
             Total Delivered
           </span>
-          <div className="text-xl font-bold text-blue-600">
+          <div className="text-xl font-bold text-emerald-700">
             {totalDelivered}
           </div>
         </div>
 
         <div>
-          <span className="text-gray-500 text-sm">
+          <span className="text-sm text-slate-500">
             Total Returned
           </span>
-          <div className="text-xl font-bold text-green-600">
+          <div className="text-xl font-bold text-amber-700">
             {totalReturned}
           </div>
         </div>
@@ -288,16 +285,16 @@ const Trip = () => {
         {containers.map((container, index) => (
           <div
             key={container.id}
-            className="bg-white p-6 rounded-2xl shadow hover:shadow-md transition"
+            className="panel p-6 transition hover:shadow-md"
           >
-            <h3 className="text-lg font-semibold mb-4">
+            <h3 className="mb-4 text-lg font-semibold text-slate-900">
               {container.name}
             </h3>
 
             <div className="grid grid-cols-2 gap-4">
 
               <div>
-                <label className="text-sm text-gray-600">
+                <label className="text-sm text-slate-600">
                   Delivered
                 </label>
                 <input
@@ -307,12 +304,12 @@ const Trip = () => {
                   onChange={(e) =>
                     handleChange(index, "delivered_qty", e.target.value)
                   }
-                  className="mt-1 w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="form-input mt-1"
                 />
               </div>
 
               <div>
-                <label className="text-sm text-gray-600">
+                <label className="text-sm text-slate-600">
                   Returned
                 </label>
                 <input
@@ -322,7 +319,7 @@ const Trip = () => {
                   onChange={(e) =>
                     handleChange(index, "returned_qty", e.target.value)
                   }
-                  className="mt-1 w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="form-input mt-1"
                 />
               </div>
 
@@ -337,10 +334,10 @@ const Trip = () => {
         <button
           onClick={handleSubmit}
           disabled={!hasAnyEntry || submitting}
-          className={`px-8 py-3 rounded-xl text-white transition ${
+          className={`rounded-xl px-8 py-3 text-white transition ${
             hasAnyEntry
-              ? "bg-blue-600 hover:bg-blue-700"
-              : "bg-gray-400 cursor-not-allowed"
+              ? "bg-slate-900 hover:bg-slate-800"
+              : "cursor-not-allowed bg-slate-400"
           }`}
         >
           {submitting ? "Submitting..." : "Submit Trip"}

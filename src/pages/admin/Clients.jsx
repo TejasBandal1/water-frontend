@@ -127,95 +127,91 @@ const Clients = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 sm:px-6 lg:px-10 py-6">
+    <div className="page-shell">
 
-      {/* HEADER */}
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
-            Clients Management
-          </h1>
-          <p className="text-gray-500 text-sm mt-1">
-            Manage customers and billing cycles
-          </p>
+      <section className="page-hero">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="page-eyebrow">Client Registry</p>
+            <h1 className="page-title">Clients Management</h1>
+            <p className="page-subtitle">Manage customer records and billing cycles with cleaner workflows.</p>
+          </div>
+
+          <button
+            onClick={() => {
+              setEditingClient(null);
+              setForm(initialForm);
+              setShowModal(true);
+            }}
+            className="btn-secondary bg-white text-slate-900 hover:bg-slate-100"
+          >
+            + Add Client
+          </button>
         </div>
-
-        <button
-          onClick={() => {
-            setEditingClient(null);
-            setForm(initialForm);
-            setShowModal(true);
-          }}
-          className="bg-black text-white px-5 py-2.5 rounded-xl hover:bg-gray-800 transition"
-        >
-          + Add Client
-        </button>
-      </div>
+      </section>
 
       {/* SEARCH */}
-      <div className="mb-6">
+      <div className="mb-6 panel p-4">
+        <label className="form-label">Search</label>
         <input
           type="text"
           placeholder="Search by name or email..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full sm:w-96 px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-black"
+          className="form-input w-full sm:w-96"
         />
       </div>
 
       {/* TABLE */}
-      <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
+      <div className="table-shell">
 
         {loading ? (
           <div className="flex justify-center py-20">
             <div className="animate-spin rounded-full h-10 w-10 border-4 border-black border-t-transparent"></div>
           </div>
         ) : filteredClients.length === 0 ? (
-          <div className="text-center py-20 text-gray-400">
-            No clients found
-          </div>
+          <div className="empty-state">No clients found</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full text-left">
-
-              <thead className="bg-gray-100 border-b">
+            <table className="table-main">
+              <thead>
                 <tr>
-                  <th className="py-4 px-4">Client</th>
-                  <th className="py-4 px-4">Email</th>
-                  <th className="py-4 px-4">Billing</th>
-                  <th className="py-4 px-4 text-right">Actions</th>
+                  <th>Client</th>
+                  <th>Email</th>
+                  <th>Billing</th>
+                  <th className="text-right">Actions</th>
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-gray-100">
+              <tbody>
                 {filteredClients.map((c) => (
-                  <tr key={c.id} className="hover:bg-gray-50 transition">
+                  <tr key={c.id}>
 
-                    <td className="py-4 px-4">
-                      <div className="font-medium">{c.name}</div>
-                      <div className="text-xs text-gray-500">
+                    <td>
+                      <div className="font-semibold text-slate-900">{c.name}</div>
+                      <div className="text-xs text-slate-500">
                         {c.phone || "-"}
                       </div>
                     </td>
 
-                    <td className="py-4 px-4">
+                    <td>
                       {c.email}
                     </td>
 
-                    <td className="py-4 px-4 capitalize">
+                    <td className="capitalize">
                       {formatBilling(c)}
                     </td>
 
-                    <td className="py-4 px-4 text-right space-x-2">
+                    <td className="text-right space-x-2">
                       <button
                         onClick={() => handleEdit(c)}
-                        className="px-3 py-1.5 text-sm bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg"
+                        className="btn-secondary px-3 py-1.5"
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => handleDelete(c.id)}
-                        className="px-3 py-1.5 text-sm bg-red-500 hover:bg-red-600 text-white rounded-lg"
+                        className="btn-danger px-3 py-1.5"
                       >
                         Delete
                       </button>
@@ -232,10 +228,10 @@ const Clients = () => {
 
       {/* MODAL */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
-          <div className="bg-white w-full max-w-xl p-6 rounded-2xl shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="panel w-full max-w-xl p-6 shadow-2xl">
 
-            <h2 className="text-lg font-semibold mb-6">
+            <h2 className="section-title mb-6">
               {editingClient ? "Edit Client" : "Add Client"}
             </h2>
 
@@ -259,7 +255,7 @@ const Clients = () => {
 
               {/* Billing Type */}
               <div>
-                <label className="block text-sm text-gray-600 mb-2">
+                <label className="form-label">
                   Billing Type
                 </label>
                 <select
@@ -267,7 +263,7 @@ const Clients = () => {
                   onChange={(e) =>
                     setForm({ ...form, billing_type: e.target.value })
                   }
-                  className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-black"
+                  className="form-select"
                 >
                   <option value="daily">Daily</option>
                   <option value="weekly">Weekly</option>
@@ -278,7 +274,7 @@ const Clients = () => {
 
               {/* Billing Interval */}
               <div>
-                <label className="block text-sm text-gray-600 mb-2">
+                <label className="form-label">
                   Billing Interval
                 </label>
                 <input
@@ -291,7 +287,7 @@ const Clients = () => {
                       billing_interval: Number(e.target.value)
                     })
                   }
-                  className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-black"
+                  className="form-input"
                 />
               </div>
 
@@ -300,14 +296,14 @@ const Clients = () => {
             <div className="mt-6 flex justify-end gap-3">
               <button
                 onClick={() => setShowModal(false)}
-                className="px-5 py-2 rounded-xl bg-gray-300 hover:bg-gray-400"
+                className="btn-secondary"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={saving}
-                className="px-5 py-2 rounded-xl bg-black text-white hover:bg-gray-800"
+                className="btn-primary"
               >
                 {saving ? "Saving..." : "Save"}
               </button>
@@ -319,7 +315,7 @@ const Clients = () => {
 
       {/* TOAST */}
       {toast && (
-        <div className="fixed bottom-6 right-6 bg-black text-white px-6 py-3 rounded-xl shadow-lg">
+        <div className="toast">
           {toast}
         </div>
       )}
@@ -332,14 +328,14 @@ const Clients = () => {
 
 const Input = ({ label, value, onChange }) => (
   <div>
-    <label className="block text-sm text-gray-600 mb-2">
+    <label className="form-label">
       {label}
     </label>
     <input
       type="text"
       value={value}
       onChange={onChange}
-      className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-black"
+      className="form-input"
     />
   </div>
 );

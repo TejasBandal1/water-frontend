@@ -46,32 +46,29 @@ const AuditLogs = () => {
   const formatDate = (date) => formatLocalDateTime(date);
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 sm:px-6 lg:px-10 py-6">
+    <div className="page-shell">
 
       {/* ================= HEADER ================= */}
-      <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
-          System Activity Logs
-        </h1>
-        <p className="text-gray-500 text-sm mt-1">
-          Transparent tracking of every system action
-        </p>
-      </div>
+      <section className="page-hero">
+        <p className="page-eyebrow">Governance</p>
+        <h1 className="page-title">System Activity Logs</h1>
+        <p className="page-subtitle">Transparent tracking of every critical system action and operator event.</p>
+      </section>
 
       {/* ================= SEARCH ================= */}
-      <div className="mb-6 flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
+      <div className="panel mb-6 p-4">
+        <label className="form-label">Search</label>
         <input
           type="text"
           placeholder="Search by user, role, action, entity or details..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full sm:w-96 px-4 py-3 rounded-xl border border-gray-300 shadow-sm 
-                     focus:outline-none focus:ring-2 focus:ring-black"
+          className="form-input w-full sm:w-[28rem]"
         />
       </div>
 
       {/* ================= TABLE ================= */}
-      <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
+      <div className="table-shell">
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
@@ -80,33 +77,22 @@ const AuditLogs = () => {
         ) : (
           <div className="overflow-x-auto">
 
-            <table className="min-w-full text-left">
-
-              <thead className="bg-gray-100 border-b sticky top-0 z-10">
+            <table className="table-main">
+              <thead className="sticky top-0 z-10">
                 <tr>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-gray-600">
-                    Time
-                  </th>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-gray-600">
-                    User
-                  </th>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-gray-600">
-                    Action
-                  </th>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-gray-600">
-                    Entity
-                  </th>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-gray-600">
-                    Details
-                  </th>
+                  <th>Time</th>
+                  <th>User</th>
+                  <th>Action</th>
+                  <th>Entity</th>
+                  <th>Details</th>
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-gray-100">
+              <tbody>
 
                 {filteredLogs.length === 0 ? (
                   <tr>
-                    <td colSpan="5" className="text-center py-16 text-gray-400">
+                    <td colSpan="5" className="empty-state">
                       No logs found
                     </td>
                   </tr>
@@ -114,41 +100,41 @@ const AuditLogs = () => {
                   filteredLogs.map((log) => (
                     <tr
                       key={log.id}
-                      className="hover:bg-gray-50 transition duration-150"
+                      className="transition duration-150"
                     >
 
                       {/* TIME */}
-                      <td className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
+                      <td className="whitespace-nowrap">
                         {formatDate(log.timestamp)}
                       </td>
 
                       {/* USER */}
-                      <td className="px-6 py-4 text-sm">
-                        <div className="font-semibold text-gray-800">
+                      <td>
+                        <div className="font-semibold text-slate-900">
                           {log.user?.name || "Deleted User"}
                         </div>
-                        <div className="text-xs text-gray-500 mt-1">
+                        <div className="mt-1 text-xs text-slate-500">
                           Role: {log.user?.role || "N/A"} | ID: {log.user?.id || "-"}
                         </div>
                       </td>
 
                       {/* ACTION */}
-                      <td className="px-6 py-4">
+                      <td>
                         <ActionBadge action={log.action} />
                       </td>
 
                       {/* ENTITY */}
-                      <td className="px-6 py-4 text-sm text-gray-700">
+                      <td>
                         <div className="font-medium">
                           {log.entity?.type || "-"}
                         </div>
-                        <div className="text-xs text-gray-500 mt-1">
+                        <div className="mt-1 text-xs text-slate-500">
                           ID: {log.entity?.id || "-"}
                         </div>
                       </td>
 
                       {/* DETAILS */}
-                      <td className="px-6 py-4 text-sm text-gray-600 max-w-xs">
+                      <td className="max-w-xs text-sm text-slate-600">
                         <div
                           className={`${
                             expandedRow === log.id
@@ -166,7 +152,7 @@ const AuditLogs = () => {
                                 expandedRow === log.id ? null : log.id
                               )
                             }
-                            className="text-blue-600 text-xs mt-2 hover:underline"
+                            className="mt-2 text-xs font-semibold text-blue-700 hover:underline"
                           >
                             {expandedRow === log.id
                               ? "Show less"
@@ -196,13 +182,13 @@ const AuditLogs = () => {
 const ActionBadge = ({ action }) => {
 
   const colorMap = {
-    CREATE: "bg-green-100 text-green-700",
+    CREATE: "bg-emerald-100 text-emerald-700",
     UPDATE: "bg-blue-100 text-blue-700",
     DELETE: "bg-red-100 text-red-700",
-    CONFIRM: "bg-purple-100 text-purple-700",
+    CONFIRM: "bg-indigo-100 text-indigo-700",
     ADD: "bg-indigo-100 text-indigo-700",
-    SET: "bg-yellow-100 text-yellow-700",
-    GENERATE: "bg-pink-100 text-pink-700"
+    SET: "bg-amber-100 text-amber-700",
+    GENERATE: "bg-teal-100 text-teal-700"
   };
 
   const key = Object.keys(colorMap).find((k) =>
@@ -214,7 +200,7 @@ const ActionBadge = ({ action }) => {
     : "bg-gray-100 text-gray-700";
 
   return (
-    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${classes}`}>
+    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${classes}`}>
       {action || "UNKNOWN"}
     </span>
   );

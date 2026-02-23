@@ -115,33 +115,30 @@ const Containers = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 sm:px-6 lg:px-10 py-6">
+    <div className="page-shell">
 
-      {/* HEADER */}
-      <div className="flex flex-col sm:flex-row justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">
-            Container Management
-          </h1>
-          <p className="text-gray-500 text-sm mt-1">
-            Manage container types
-          </p>
+      <section className="page-hero">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="page-eyebrow">Master Data</p>
+            <h1 className="page-title">Container Management</h1>
+            <p className="page-subtitle">Maintain active container types with clear status visibility.</p>
+          </div>
+          <button
+            onClick={() => {
+              setEditingContainer(null);
+              setForm({ name: "", description: "" });
+              setShowModal(true);
+            }}
+            className="btn-secondary bg-white text-slate-900 hover:bg-slate-100"
+          >
+            + Add Container
+          </button>
         </div>
-
-        <button
-          onClick={() => {
-            setEditingContainer(null);
-            setForm({ name: "", description: "" });
-            setShowModal(true);
-          }}
-          className="bg-black text-white px-5 py-2.5 rounded-xl hover:bg-gray-800 transition"
-        >
-          + Add Container
-        </button>
-      </div>
+      </section>
 
       {/* FILTERS */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+      <div className="mb-6 grid grid-cols-1 gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-4">
         <input
           type="text"
           placeholder="Search container..."
@@ -150,65 +147,62 @@ const Containers = () => {
             setSearch(e.target.value);
             setCurrentPage(1);
           }}
-          className="w-full sm:w-80 px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-black"
+          className="form-input"
         />
 
         <button
           onClick={() => setShowInactive(!showInactive)}
-          className="px-4 py-2 rounded-xl bg-gray-200 hover:bg-gray-300 text-sm"
+          className="btn-secondary"
         >
           {showInactive ? "Hide Inactive" : "Show Inactive"}
         </button>
 
         <button
           onClick={() => setSortAsc(!sortAsc)}
-          className="px-4 py-2 rounded-xl bg-gray-200 hover:bg-gray-300 text-sm"
+          className="btn-secondary"
         >
           Sort {sortAsc ? "A-Z" : "Z-A"}
         </button>
       </div>
 
       {/* TABLE */}
-      <div className="bg-white rounded-2xl shadow-md border overflow-hidden">
+      <div className="table-shell">
 
         {loading ? (
           <div className="flex justify-center py-20">
             <div className="animate-spin h-10 w-10 border-4 border-black border-t-transparent rounded-full" />
           </div>
         ) : paginatedContainers.length === 0 ? (
-          <div className="text-center py-20 text-gray-400">
-            No containers found
-          </div>
+          <div className="empty-state">No containers found</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full text-left">
-
-              <thead className="bg-gray-100 border-b">
+            <table className="table-main">
+              <thead>
                 <tr>
-                  <th className="px-4 py-4">Name</th>
-                  <th className="px-4 py-4">Description</th>
-                  <th className="px-4 py-4">Status</th>
-                  <th className="px-4 py-4 text-right">Actions</th>
+                  <th>Name</th>
+                  <th>Description</th>
+                  <th>Status</th>
+                  <th className="text-right">Actions</th>
                 </tr>
               </thead>
 
-              <tbody className="divide-y">
+              <tbody>
                 {paginatedContainers.map((c) => (
-                  <tr key={c.id} className="hover:bg-gray-50 transition">
+                  <tr key={c.id}>
 
-                    <td className="px-4 py-4 font-medium">
+                    <td className="font-semibold text-slate-900">
                       {c.name}
                     </td>
 
-                    <td className="px-4 py-4 text-gray-600">
+                    <td className="text-slate-600">
                       {c.description || "-"}
                     </td>
 
-                    <td className="px-4 py-4">
+                    <td>
                       <StatusBadge active={c.is_active} />
                     </td>
 
-                    <td className="px-4 py-4 text-right space-x-2">
+                    <td className="text-right space-x-2">
                       <button
                         onClick={() => {
                           setEditingContainer(c);
@@ -218,7 +212,7 @@ const Containers = () => {
                           });
                           setShowModal(true);
                         }}
-                        className="px-3 py-1 bg-yellow-500 text-white rounded-lg"
+                        className="btn-secondary px-3 py-1.5"
                       >
                         Edit
                       </button>
@@ -226,7 +220,7 @@ const Containers = () => {
                       {c.is_active && (
                         <button
                           onClick={() => setDeleteId(c.id)}
-                          className="px-3 py-1 bg-red-500 text-white rounded-lg"
+                          className="btn-danger px-3 py-1.5"
                         >
                           Deactivate
                         </button>
@@ -249,10 +243,10 @@ const Containers = () => {
             <button
               key={i}
               onClick={() => setCurrentPage(i + 1)}
-              className={`px-3 py-1 rounded-lg ${
+              className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
                 currentPage === i + 1
-                  ? "bg-black text-white"
-                  : "bg-gray-200"
+                  ? "bg-slate-900 text-white"
+                  : "bg-slate-200 text-slate-700"
               }`}
             >
               {i + 1}
@@ -287,13 +281,13 @@ const Containers = () => {
           <div className="flex justify-end gap-3 mt-6">
             <button
               onClick={() => setShowModal(false)}
-              className="px-4 py-2 bg-gray-300 rounded-xl"
+              className="btn-secondary"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
-              className="px-4 py-2 bg-black text-white rounded-xl"
+              className="btn-primary"
             >
               Save
             </button>
@@ -308,13 +302,13 @@ const Containers = () => {
           <div className="flex justify-end gap-3">
             <button
               onClick={() => setDeleteId(null)}
-              className="px-4 py-2 bg-gray-300 rounded-xl"
+              className="btn-secondary"
             >
               Cancel
             </button>
             <button
               onClick={confirmDelete}
-              className="px-4 py-2 bg-red-600 text-white rounded-xl"
+              className="btn-danger"
             >
               Deactivate
             </button>
@@ -324,7 +318,7 @@ const Containers = () => {
 
       {/* TOAST */}
       {toast && (
-        <div className="fixed bottom-6 right-6 bg-black text-white px-6 py-3 rounded-xl shadow-lg">
+        <div className="toast">
           {toast}
         </div>
       )}
@@ -339,7 +333,7 @@ const Modal = ({ children, onClose }) => (
     onClick={onClose}
   >
     <div
-      className="bg-white w-full max-w-md p-6 rounded-2xl shadow-xl"
+      className="panel w-full max-w-md p-6 shadow-xl"
       onClick={(e) => e.stopPropagation()}
     >
       {children}
@@ -350,14 +344,14 @@ const Modal = ({ children, onClose }) => (
 /* INPUT */
 const Input = ({ label, value, onChange }) => (
   <div className="mb-4">
-    <label className="block text-sm text-gray-600 mb-2">
+    <label className="form-label">
       {label}
     </label>
     <input
       type="text"
       value={value}
       onChange={onChange}
-      className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-black"
+      className="form-input"
     />
   </div>
 );
@@ -365,9 +359,9 @@ const Input = ({ label, value, onChange }) => (
 /* STATUS BADGE */
 const StatusBadge = ({ active }) => (
   <span
-    className={`px-3 py-1 rounded-full text-xs font-semibold ${
+    className={`rounded-full px-3 py-1 text-xs font-semibold ${
       active
-        ? "bg-green-100 text-green-700"
+        ? "bg-emerald-100 text-emerald-700"
         : "bg-red-100 text-red-600"
     }`}
   >

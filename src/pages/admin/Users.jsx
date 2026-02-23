@@ -180,17 +180,13 @@ const Users = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 md:px-10 py-6">
+    <div className="page-shell">
 
-      {/* HEADER */}
-      <div className="mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold">
-          Team & Access Control
-        </h1>
-        <p className="text-gray-500 text-sm">
-          Manage users and permissions
-        </p>
-      </div>
+      <section className="page-hero">
+        <p className="page-eyebrow">Identity & Access</p>
+        <h1 className="page-title">Team & Access Control</h1>
+        <p className="page-subtitle">Manage users, roles, and client-linked accounts with stronger operational clarity.</p>
+      </section>
 
       {/* SUMMARY */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -201,8 +197,8 @@ const Users = () => {
       </div>
 
       {/* CREATE / EDIT FORM */}
-      <div className="bg-white p-6 rounded-2xl shadow mb-10 border">
-        <h2 className="text-lg font-semibold mb-4">
+      <div className="panel mb-10 p-6">
+        <h2 className="section-title mb-4">
           {editingUser ? "Edit User" : "Create New User"}
         </h2>
 
@@ -214,7 +210,7 @@ const Users = () => {
             onChange={(e) =>
               setForm({ ...form, name: e.target.value })
             }
-            className="p-2 border rounded-lg"
+            className="form-input"
           />
 
           <input
@@ -223,7 +219,7 @@ const Users = () => {
             onChange={(e) =>
               setForm({ ...form, email: e.target.value })
             }
-            className="p-2 border rounded-lg"
+            className="form-input"
           />
 
           <input
@@ -237,7 +233,7 @@ const Users = () => {
             onChange={(e) =>
               setForm({ ...form, password: e.target.value })
             }
-            className="p-2 border rounded-lg"
+            className="form-input"
           />
 
           <select
@@ -245,7 +241,7 @@ const Users = () => {
             onChange={(e) =>
               setForm({ ...form, role: e.target.value })
             }
-            className="p-2 border rounded-lg"
+            className="form-select"
           >
             <option value="admin">Admin</option>
             <option value="manager">Manager</option>
@@ -259,7 +255,7 @@ const Users = () => {
               onChange={(e) =>
                 setForm({ ...form, client_id: e.target.value })
               }
-              className="p-2 border rounded-lg"
+              className="form-select"
             >
               <option value="">Select Client</option>
               {clients.map((c) => (
@@ -275,7 +271,7 @@ const Users = () => {
           <button
             onClick={handleSubmit}
             disabled={saving}
-            className="bg-black text-white px-6 py-2 rounded-lg disabled:bg-gray-400"
+            className="btn-primary px-6"
           >
             {saving
               ? "Saving..."
@@ -287,7 +283,7 @@ const Users = () => {
           {editingUser && (
             <button
               onClick={handleCancel}
-              className="bg-gray-400 text-white px-6 py-2 rounded-lg"
+              className="btn-secondary px-6"
             >
               Cancel
             </button>
@@ -301,49 +297,47 @@ const Users = () => {
           placeholder="Search users..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="p-2 border rounded-lg w-full sm:w-96"
+          className="form-input w-full sm:w-96"
         />
       </div>
 
       {/* USERS TABLE */}
-      <div className="bg-white rounded-2xl shadow border overflow-x-auto">
+      <div className="table-shell">
 
         {loading ? (
           <div className="flex justify-center py-20">
             <div className="animate-spin h-10 w-10 border-4 border-black border-t-transparent rounded-full"></div>
           </div>
         ) : filteredUsers.length === 0 ? (
-          <div className="text-center py-20 text-gray-400">
-            No users found
-          </div>
+          <div className="empty-state">No users found</div>
         ) : (
-          <table className="w-full text-left min-w-[700px]">
-            <thead className="bg-gray-100 border-b">
+          <table className="table-main min-w-[700px]">
+            <thead>
               <tr>
-                <th className="p-4">Name</th>
-                <th className="p-4">Email</th>
-                <th className="p-4">Role</th>
-                <th className="p-4">Change Role</th>
-                <th className="p-4">Actions</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Change Role</th>
+                <th>Actions</th>
               </tr>
             </thead>
 
             <tbody>
               {filteredUsers.map((u) => (
-                <tr key={u.id} className="border-b hover:bg-gray-50">
-                  <td className="p-4 font-medium">{u.name}</td>
-                  <td className="p-4">{u.email}</td>
-                  <td className="p-4">
+                <tr key={u.id}>
+                  <td className="font-semibold text-slate-900">{u.name}</td>
+                  <td>{u.email}</td>
+                  <td>
                     {roleBadge(u.role?.name)}
                   </td>
-                  <td className="p-4">
+                  <td>
                     <select
                       value={u.role?.name}
                       disabled={u.id === user.id}
                       onChange={(e) =>
                         handleRoleChange(u.id, e.target.value)
                       }
-                      className="p-2 border rounded-lg"
+                      className="form-select"
                     >
                       <option value="admin">Admin</option>
                       <option value="manager">Manager</option>
@@ -351,10 +345,10 @@ const Users = () => {
                       <option value="client">Client</option>
                     </select>
                   </td>
-                  <td className="p-4 space-x-2">
+                  <td className="space-x-2">
                     <button
                       onClick={() => handleEditClick(u)}
-                      className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded"
+                      className="btn-secondary px-3 py-1.5"
                     >
                       Edit
                     </button>
@@ -362,7 +356,7 @@ const Users = () => {
                     {u.id !== user.id && (
                       <button
                         onClick={() => handleDelete(u.id)}
-                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
+                        className="btn-danger px-3 py-1.5"
                       >
                         Delete
                       </button>
@@ -377,7 +371,7 @@ const Users = () => {
 
       {/* TOAST */}
       {toast && (
-        <div className="fixed bottom-6 right-6 bg-black text-white px-6 py-3 rounded-xl shadow-lg">
+        <div className="toast">
           {toast}
         </div>
       )}
@@ -386,9 +380,9 @@ const Users = () => {
 };
 
 const SummaryCard = ({ title, value }) => (
-  <div className="bg-white p-4 md:p-6 rounded-2xl shadow hover:shadow-md transition border">
-    <h3 className="text-gray-500 text-sm">{title}</h3>
-    <h2 className="text-xl md:text-2xl font-bold mt-2">{value}</h2>
+  <div className="stat-card p-4 md:p-6">
+    <h3 className="stat-label">{title}</h3>
+    <h2 className="mt-2 text-xl font-bold text-slate-900 md:text-2xl">{value}</h2>
   </div>
 );
 

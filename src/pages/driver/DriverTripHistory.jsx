@@ -70,26 +70,23 @@ const DriverTripHistory = () => {
   }, [trips, filterType, selectedDate]);
 
   return (
-    <div className="p-4 md:p-8 bg-gray-100 min-h-screen">
+    <div className="page-shell">
 
       {/* HEADER */}
-      <div className="mb-8 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold">
-            Trip History
-          </h1>
-          <p className="text-gray-500 text-sm">
-            Complete record of your deliveries
-          </p>
-        </div>
+      <section className="page-hero">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="page-eyebrow">Operations</p>
+            <h1 className="page-title">Trip History</h1>
+            <p className="page-subtitle">Complete record of your deliveries with responsive filters.</p>
+          </div>
 
-        {/* FILTER SECTION */}
-        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto">
 
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="px-4 py-2 border rounded-lg"
+            className="form-select bg-white/95 text-slate-800"
           >
             <option value="all">All</option>
             <option value="daily">Daily</option>
@@ -103,59 +100,63 @@ const DriverTripHistory = () => {
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="px-4 py-2 border rounded-lg"
+              className="form-input bg-white/95 text-slate-800"
             />
           )}
 
         </div>
-      </div>
+        </div>
+      </section>
 
       {/* TABLE */}
-      <div className="bg-white rounded-2xl shadow">
+      <div className="table-shell">
 
         {loading ? (
-          <div className="p-6 text-gray-500">
+          <div className="p-6 text-slate-500">
             Loading trips...
           </div>
         ) : filteredTrips.length === 0 ? (
-          <div className="p-6 text-gray-500">
+          <div className="empty-state">
             No trips found.
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left">
-
-              <thead className="bg-gray-50 border-b">
+            <table className="table-main">
+              <thead>
                 <tr>
-                  <th className="py-3 px-4">Trip ID</th>
-                  <th className="py-3 px-4">Client</th>
-                  <th className="py-3 px-4">Delivered</th>
-                  <th className="py-3 px-4">Returned</th>
-                  <th className="py-3 px-4">Date</th>
+                  <th>Trip ID</th>
+                  <th>Client</th>
+                  <th>Delivered</th>
+                  <th>Returned</th>
+                  <th>Date</th>
                 </tr>
               </thead>
 
               <tbody>
                 {filteredTrips.map((trip) => (
-                  <tr key={trip.id} className="border-b hover:bg-gray-50">
+                  <tr key={trip.id}>
 
-                    <td className="py-3 px-4 font-medium">
+                    <td className="font-semibold text-slate-900">
                       #{trip.id}
                     </td>
 
-                    <td className="py-3 px-4">
+                    <td>
                       {trip.client?.name}
                     </td>
 
-                    <td className="py-3 px-4">
-                      {trip.total_delivered || 0}
+                    <td>
+                      <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                        {trip.total_delivered || 0}
+                      </span>
                     </td>
 
-                    <td className="py-3 px-4">
-                      {trip.total_returned || 0}
+                    <td>
+                      <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
+                        {trip.total_returned || 0}
+                      </span>
                     </td>
 
-                    <td className="py-3 px-4">
+                    <td className="whitespace-nowrap">
                       {formatLocalDateTime(trip.created_at)}
                     </td>
 

@@ -24,58 +24,62 @@ const DriverOrders = () => {
   };
 
   return (
-    <div className="p-4 md:p-8 bg-gray-100 min-h-screen">
+    <div className="page-shell">
+      <section className="page-hero">
+        <p className="page-eyebrow">Operations</p>
+        <h1 className="page-title">Orders Breakdown</h1>
+        <p className="page-subtitle">Container-level delivery details across all your recorded trips.</p>
+      </section>
 
-      <div className="mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold">
-          Orders Breakdown
-        </h1>
-        <p className="text-gray-500 text-sm">
-          Container-level delivery details
-        </p>
-      </div>
-
-      <div className="bg-white rounded-2xl shadow">
+      <div className="table-shell">
 
         {loading ? (
-          <div className="p-6 text-gray-500">
+          <div className="p-6 text-slate-500">
             Loading orders...
           </div>
         ) : orders.length === 0 ? (
-          <div className="p-6 text-gray-500">
+          <div className="empty-state">
             No orders found.
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left">
-
-              <thead className="bg-gray-50 border-b">
+            <table className="table-main">
+              <thead>
                 <tr>
-                  <th className="py-3 px-4">Trip ID</th>
-                  <th className="py-3 px-4">Container</th>
-                  <th className="py-3 px-4">Delivered</th>
-                  <th className="py-3 px-4">Returned</th>
+                  <th>Trip ID</th>
+                  <th>Container</th>
+                  <th>Delivered</th>
+                  <th>Returned</th>
                 </tr>
               </thead>
 
               <tbody>
-                {orders.map((order) => (
-                  <tr key={order.id} className="border-b hover:bg-gray-50">
+                {orders.map((order, index) => (
+                  <tr key={order.id}>
 
-                    <td className="py-3 px-4 font-medium">
+                    <td className="font-semibold text-slate-900">
                       #{order.trip_id}
                     </td>
 
-                    <td className="py-3 px-4">
+                    <td>
                       {order.container?.name}
                     </td>
 
-                    <td className="py-3 px-4 text-green-600">
+                    <td>
+                      <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
                       {order.delivered_qty}
+                      </span>
                     </td>
 
-                    <td className="py-3 px-4 text-orange-600">
+                    <td>
+                      <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
                       {order.returned_qty}
+                      </span>
+                      {index === 0 && (
+                        <span className="ml-2 rounded-full bg-slate-100 px-2 py-1 text-[10px] font-semibold text-slate-500">
+                          latest
+                        </span>
+                      )}
                     </td>
 
                   </tr>
