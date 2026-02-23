@@ -115,8 +115,13 @@ export const generateAllInvoices = async () => {
   return res.data;
 };
 
-export const cancelInvoice = async (invoiceId) => {
-  const res = await API.post(`/admin/billing/cancel/${invoiceId}`);
+export const cancelInvoice = async (invoiceId, reason) => {
+  const res = await API.post(`/admin/billing/cancel/${invoiceId}`, { reason });
+  return res.data;
+};
+
+export const voidReissueInvoice = async (invoiceId, reason) => {
+  const res = await API.post(`/admin/billing/void-reissue/${invoiceId}`, { reason });
   return res.data;
 };
 
