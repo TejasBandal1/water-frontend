@@ -101,6 +101,15 @@ export const createManualBill = async (data) => {
   return res.data;
 };
 
+export const getPendingReturns = async (search) => {
+  const res = await API.get("/admin/pending-returns", {
+    params: {
+      search: search || undefined
+    }
+  });
+  return res.data;
+};
+
 /* ==========================================
    BILLING
 ========================================== */

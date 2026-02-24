@@ -54,6 +54,7 @@ const Sidebar = ({ collapsed, onNavigate }) => {
             <SidebarNavItem to="/admin/pricing" code="PR" label="Pricing" collapsed={collapsed} onNavigate={onNavigate} />
             <SidebarNavItem to="/admin/invoices" code="IV" label="Invoices" collapsed={collapsed} onNavigate={onNavigate} />
             <SidebarNavItem to="/admin/analytics" code="AN" label="Analytics" collapsed={collapsed} onNavigate={onNavigate} />
+            <SidebarNavItem to="/admin/pending-returns" code="RT" label="Pending Returns" collapsed={collapsed} onNavigate={onNavigate} />
             <SidebarNavItem to="/admin/delivery-matrix" code="DM" label="Delivery Matrix" collapsed={collapsed} onNavigate={onNavigate} />
             <SidebarNavItem to="/admin/missing-bills" code="MB" label="Missing Bills" collapsed={collapsed} onNavigate={onNavigate} />
             <SidebarNavItem to="/admin/users" code="US" label="Users" collapsed={collapsed} onNavigate={onNavigate} />

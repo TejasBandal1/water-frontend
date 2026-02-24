@@ -18,6 +18,7 @@ import InvoiceDetail from "./pages/admin/InvoiceDetail";
 import Analytics from "./pages/admin/Analytics";
 import DeliveryMatrix from "./pages/admin/DeliveryMatrix";
 import MissingBills from "./pages/admin/MissingBills";
+import PendingReturns from "./pages/admin/PendingReturns";
 
 /* ================= DRIVER ================= */
 import DriverDashboard from "./pages/driver/Dashboard";
@@ -114,6 +115,7 @@ function App() {
         <Route path="audit" element={<AuditLogs />} />
         <Route path="delivery-matrix" element={<DeliveryMatrix />} />
         <Route path="missing-bills" element={<MissingBills />} />
+        <Route path="pending-returns" element={<PendingReturns />} />
       </Route>
 
       {/* ================= MANAGER ================= */}
