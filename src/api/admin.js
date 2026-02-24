@@ -150,28 +150,34 @@ export const getRevenuePerClient = async (fromDate, toDate) => {
   return res.data;
 };
 
-export const getOutstanding = async () => {
-  const res = await API.get("/analytics/outstanding");
+export const getOutstanding = async (clientId) => {
+  const res = await API.get("/analytics/outstanding", {
+    params: {
+      client_id: clientId || undefined
+    }
+  });
   return res.data;
 };
 
-export const getMonthlyRevenue = async (period, fromDate, toDate) => {
+export const getMonthlyRevenue = async (period, fromDate, toDate, clientId) => {
   const res = await API.get("/analytics/monthly-revenue", {
     params: {
       period: period || "monthly",
       from_date: fromDate || undefined,
-      to_date: toDate || undefined
+      to_date: toDate || undefined,
+      client_id: clientId || undefined
     }
   });
 
   return res.data;
 };
 
-export const getContainerLoss = async (fromDate, toDate) => {
+export const getContainerLoss = async (fromDate, toDate, clientId) => {
   const res = await API.get("/analytics/container-loss", {
     params: {
       from_date: fromDate || undefined,
-      to_date: toDate || undefined
+      to_date: toDate || undefined,
+      client_id: clientId || undefined
     }
   });
 

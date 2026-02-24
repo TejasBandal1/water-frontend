@@ -16,6 +16,7 @@ import {
 } from "recharts";
 import {
   getContainerLoss,
+  getClients,
   getMonthlyRevenue,
   getOutstanding
 } from "../../api/admin";
@@ -26,23 +27,37 @@ const Analytics = () => {
   const [period, setPeriod] = useState("monthly");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [selectedClientId, setSelectedClientId] = useState("");
 
   const [summary, setSummary] = useState({});
   const [revenueData, setRevenueData] = useState([]);
   const [containerData, setContainerData] = useState([]);
+  const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    loadClients();
     fetchData();
   }, []);
+
+  const loadClients = async () => {
+    try {
+      const data = await getClients();
+      setClients((data || []).filter((client) => client.is_active !== false));
+    } catch (err) {
+      console.error("Failed to load clients for analytics:", err);
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
     try {
+      const clientId = selectedClientId ? Number(selectedClientId) : undefined;
+
       const [outstandingRes, revenueRes, containerRes] = await Promise.all([
-        getOutstanding(),
-        getMonthlyRevenue(period, fromDate, toDate),
-        getContainerLoss(fromDate, toDate)
+        getOutstanding(clientId),
+        getMonthlyRevenue(period, fromDate, toDate, clientId),
+        getContainerLoss(fromDate, toDate, clientId)
       ]);
 
       setSummary(outstandingRes || {});
@@ -105,6 +120,13 @@ const Analytics = () => {
       ? totalRevenue / revenueData.length
       : 0;
 
+  const selectedClient = useMemo(
+    () => clients.find((client) => String(client.id) === String(selectedClientId)) || null,
+    [clients, selectedClientId]
+  );
+
+  const clientLabel = selectedClient ? selectedClient.name : "All Clients";
+
   const revenueSeries = useMemo(
     () =>
       revenueData.map((row) => ({
@@ -159,11 +181,11 @@ const Analytics = () => {
               Business Intelligence Dashboard
             </h1>
             <p className="mt-2 text-sm text-slate-200">
-              Revenue, payment health, and container circulation in one view.
+              Revenue, payment health, and container circulation for {clientLabel}.
             </p>
           </div>
 
-          <div className="grid w-full gap-3 sm:grid-cols-2 lg:w-auto lg:grid-cols-4">
+          <div className="grid w-full gap-3 sm:grid-cols-2 lg:w-auto lg:grid-cols-5">
             <select
               value={period}
               onChange={(e) => setPeriod(e.target.value)}
@@ -173,6 +195,19 @@ const Analytics = () => {
               <option value="weekly">Weekly</option>
               <option value="monthly">Monthly</option>
               <option value="yearly">Yearly</option>
+            </select>
+
+            <select
+              value={selectedClientId}
+              onChange={(e) => setSelectedClientId(e.target.value)}
+              className="rounded-xl border border-slate-500 bg-slate-800/80 px-3 py-2 text-sm text-white outline-none ring-0 transition focus:border-blue-400"
+            >
+              <option value="">All Clients</option>
+              {clients.map((client) => (
+                <option key={client.id} value={client.id}>
+                  {client.name}
+                </option>
+              ))}
             </select>
 
             <input
@@ -202,7 +237,7 @@ const Analytics = () => {
       <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard title="Total Revenue" value={formatCurrency(totalRevenue)} trend="up" subtitle={`Avg ${formatCurrency(averageRevenue)} per ${period.slice(0, -2) || "period"}`} />
         <KpiCard title="Collection Rate" value={`${collectionRate}%`} trend={collectionRate >= 80 ? "up" : "down"} subtitle="Paid / billed performance" />
-        <KpiCard title="Outstanding Value" value={formatCurrency(totalOutstanding)} trend="warn" subtitle="Pending client payments" />
+        <KpiCard title="Outstanding Value" value={formatCurrency(totalOutstanding)} trend="warn" subtitle={`Pending payments | ${clientLabel}`} />
         <KpiCard title="Containers Outside" value={totalContainersOutside} trend="neutral" subtitle={`Return efficiency ${returnEfficiency}%`} />
       </section>
 
@@ -328,7 +363,7 @@ const Analytics = () => {
       <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-base font-semibold text-slate-900">Financial Snapshot</h2>
-          <p className="text-xs text-slate-500">Auto-calculated from confirmed invoices and trip logs</p>
+          <p className="text-xs text-slate-500">Auto-calculated from confirmed invoices and trip logs | {clientLabel}</p>
         </div>
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Snapshot label="Total Billed" value={formatCurrency(totalBilled)} />
