@@ -46,21 +46,42 @@ const getRouteInfo = (pathname, role) => {
   return { title: "Dashboard", scope: "Workspace" };
 };
 
-const Topbar = ({ toggleSidebar, toggleCollapse, collapsed }) => {
+const Topbar = ({
+  toggleSidebar,
+  closeSidebar,
+  sidebarOpen,
+  toggleCollapse,
+  collapsed
+}) => {
   const { user, logout } = useContext(AuthContext);
   const location = useLocation();
   const routeInfo = getRouteInfo(location.pathname, user?.role);
 
+  const role = String(user?.role || "").toLowerCase();
+  const roleTone =
+    role === "admin"
+      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+      : role === "driver"
+        ? "bg-blue-50 text-blue-700 border-blue-200"
+        : role === "manager"
+          ? "bg-amber-50 text-amber-700 border-amber-200"
+          : "bg-slate-100 text-slate-700 border-slate-200";
+
+  const handleLogout = () => {
+    closeSidebar?.();
+    logout();
+  };
+
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
-      <div className="mx-auto flex h-[68px] w-full max-w-[1540px] items-center justify-between px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 backdrop-blur-xl">
+      <div className="mx-auto flex h-[70px] w-full max-w-[1540px] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-3 md:gap-4">
           <button
             onClick={toggleSidebar}
             aria-label="Toggle sidebar"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 bg-white text-[11px] font-semibold text-slate-700 transition hover:bg-slate-100 md:hidden"
+            className="inline-flex h-9 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 text-[11px] font-semibold tracking-wide text-slate-700 transition hover:bg-slate-100 md:hidden"
           >
-            MENU
+            {sidebarOpen ? "CLOSE" : "MENU"}
           </button>
 
           <button
@@ -71,11 +92,11 @@ const Topbar = ({ toggleSidebar, toggleCollapse, collapsed }) => {
             {collapsed ? "EXPAND" : "COLLAPSE"}
           </button>
 
-          <div className="hidden sm:block">
+          <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
               {routeInfo.scope}
             </p>
-            <h1 className="text-base font-semibold text-slate-900 md:text-lg">
+            <h1 className="text-sm font-semibold text-slate-900 sm:text-base md:text-lg">
               {routeInfo.title}
             </h1>
           </div>
@@ -90,12 +111,12 @@ const Topbar = ({ toggleSidebar, toggleCollapse, collapsed }) => {
             {user?.name?.charAt(0).toUpperCase()}
           </div>
 
-          <span className="hidden rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 sm:inline-flex">
+          <span className={`hidden rounded-full border px-3 py-1 text-xs font-semibold sm:inline-flex ${roleTone}`}>
             {user?.role?.toUpperCase()}
           </span>
 
           <button
-            onClick={logout}
+            onClick={handleLogout}
             className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-slate-800"
           >
             Logout

@@ -18,7 +18,13 @@ const IconDot = ({ code }) => (
 );
 
 const SidebarNavItem = ({ to, code, label, collapsed, onNavigate }) => (
-  <NavLink to={to} end className={getLinkClasses} onClick={onNavigate}>
+  <NavLink
+    to={to}
+    end
+    className={getLinkClasses}
+    onClick={onNavigate}
+    title={collapsed ? label : undefined}
+  >
     <IconDot code={code} />
     {!collapsed && <span>{label}</span>}
   </NavLink>
@@ -37,6 +43,7 @@ const Sidebar = ({ collapsed, onNavigate }) => {
             <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Workspace</p>
             <h2 className="mt-1 text-lg font-bold tracking-tight">{BRAND.name}</h2>
             <p className="text-xs text-slate-400">{BRAND.shortName}</p>
+            <p className="mt-1 text-[11px] text-slate-500">{BRAND.tagline}</p>
           </>
         ) : (
           <div className="text-center text-xs font-semibold text-slate-300">{BRAND.initials}</div>
@@ -91,12 +98,16 @@ const Sidebar = ({ collapsed, onNavigate }) => {
         )}
       </nav>
 
-      {!collapsed && (
-        <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-900/70 px-3 py-3 text-xs text-slate-400">
-          Logged in as
-          <div className="mt-1 font-semibold text-slate-200">{user.role.toUpperCase()}</div>
+      <div
+        className={`mt-4 rounded-2xl border border-slate-800 bg-slate-900/70 px-3 py-3 text-xs text-slate-400 ${
+          collapsed ? "text-center" : ""
+        }`}
+      >
+        {!collapsed && <p>Logged in as</p>}
+        <div className={`mt-1 font-semibold text-slate-200 ${collapsed ? "text-[11px]" : ""}`}>
+          {user.role.toUpperCase()}
         </div>
-      )}
+      </div>
     </aside>
   );
 };

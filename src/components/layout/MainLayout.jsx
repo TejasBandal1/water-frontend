@@ -1,11 +1,32 @@
 import { Outlet } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 
 const MainLayout = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    const stored = window.localStorage.getItem("rr_sidebar_collapsed");
+    return stored === "1";
+  });
+
+  useEffect(() => {
+    window.localStorage.setItem("rr_sidebar_collapsed", collapsed ? "1" : "0");
+  }, [collapsed]);
+
+  useEffect(() => {
+    if (!mobileSidebarOpen) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [mobileSidebarOpen]);
+
+  const toggleMobileSidebar = () => setMobileSidebarOpen((prev) => !prev);
+  const closeMobileSidebar = () => setMobileSidebarOpen(false);
 
   return (
     <div className="flex min-h-screen bg-[var(--rr-bg)]">
@@ -17,22 +38,22 @@ const MainLayout = () => {
           ${collapsed ? "w-20" : "w-64"}
           border-r border-slate-800
           transform
-          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+          ${mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"}
           transition-all duration-300 ease-in-out
           md:translate-x-0 md:static
         `}
       >
         <Sidebar
           collapsed={collapsed}
-          onNavigate={() => setSidebarOpen(false)}
+          onNavigate={closeMobileSidebar}
         />
       </div>
 
       {/* Overlay (Mobile) */}
-      {sidebarOpen && (
+      {mobileSidebarOpen && (
         <div
           className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm md:hidden"
-          onClick={() => setSidebarOpen(false)}
+          onClick={closeMobileSidebar}
         />
       )}
 
@@ -40,7 +61,9 @@ const MainLayout = () => {
       <div className="flex min-w-0 flex-1 flex-col">
 
         <Topbar
-          toggleSidebar={() => setSidebarOpen((prev) => !prev)}
+          toggleSidebar={toggleMobileSidebar}
+          closeSidebar={closeMobileSidebar}
+          sidebarOpen={mobileSidebarOpen}
           toggleCollapse={() => setCollapsed((prev) => !prev)}
           collapsed={collapsed}
         />
