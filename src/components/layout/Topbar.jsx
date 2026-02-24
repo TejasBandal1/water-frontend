@@ -1,18 +1,64 @@
 import { useContext } from "react";
+import { useLocation } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import { BRAND } from "../../config/brand";
 
+const routeMeta = [
+  { pattern: /^\/admin\/?$/, title: "Dashboard", scope: "Administration" },
+  { pattern: /^\/admin\/clients/, title: "Clients", scope: "Administration" },
+  { pattern: /^\/admin\/containers/, title: "Containers", scope: "Administration" },
+  { pattern: /^\/admin\/pricing/, title: "Pricing", scope: "Administration" },
+  { pattern: /^\/admin\/invoices\/\d+/, title: "Invoice Detail", scope: "Administration" },
+  { pattern: /^\/admin\/invoices/, title: "Invoices", scope: "Administration" },
+  { pattern: /^\/admin\/analytics/, title: "Analytics", scope: "Administration" },
+  { pattern: /^\/admin\/pending-returns/, title: "Pending Returns", scope: "Administration" },
+  { pattern: /^\/admin\/delivery-matrix/, title: "Delivery Matrix", scope: "Administration" },
+  { pattern: /^\/admin\/missing-bills/, title: "Missing Bills", scope: "Administration" },
+  { pattern: /^\/admin\/users/, title: "Users", scope: "Administration" },
+  { pattern: /^\/admin\/audit/, title: "Audit Logs", scope: "Administration" },
+  { pattern: /^\/manager/, title: "Manager Overview", scope: "Management" },
+  { pattern: /^\/driver\/?$/, title: "Driver Dashboard", scope: "Operations" },
+  { pattern: /^\/driver\/trip/, title: "New Trip", scope: "Operations" },
+  { pattern: /^\/driver\/history/, title: "Trip History", scope: "Operations" },
+  { pattern: /^\/driver\/orders/, title: "Orders", scope: "Operations" },
+  { pattern: /^\/client/, title: "Client Dashboard", scope: "Client Portal" }
+];
+
+const getRouteInfo = (pathname, role) => {
+  const found = routeMeta.find((entry) => entry.pattern.test(pathname));
+
+  if (found) {
+    return found;
+  }
+
+  if (role === "admin") {
+    return { title: "Administration", scope: "Administration" };
+  }
+
+  if (role === "driver") {
+    return { title: "Operations", scope: "Operations" };
+  }
+
+  if (role === "manager") {
+    return { title: "Manager", scope: "Management" };
+  }
+
+  return { title: "Dashboard", scope: "Workspace" };
+};
+
 const Topbar = ({ toggleSidebar, toggleCollapse, collapsed }) => {
   const { user, logout } = useContext(AuthContext);
+  const location = useLocation();
+  const routeInfo = getRouteInfo(location.pathname, user?.role);
 
   return (
-    <header className="sticky top-0 z-50 h-16 border-b border-slate-200/70 bg-white/95 backdrop-blur-sm">
-      <div className="flex h-full items-center justify-between px-4 md:px-8">
+    <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
+      <div className="mx-auto flex h-[68px] w-full max-w-[1540px] items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-3 md:gap-4">
           <button
             onClick={toggleSidebar}
             aria-label="Toggle sidebar"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-700 transition hover:bg-slate-100 md:hidden"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 bg-white text-[11px] font-semibold text-slate-700 transition hover:bg-slate-100 md:hidden"
           >
             MENU
           </button>
@@ -20,21 +66,27 @@ const Topbar = ({ toggleSidebar, toggleCollapse, collapsed }) => {
           <button
             onClick={toggleCollapse}
             aria-label="Collapse sidebar"
-            className="hidden md:inline-flex h-9 items-center rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
+            className="hidden md:inline-flex h-9 items-center rounded-lg border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
           >
             {collapsed ? "EXPAND" : "COLLAPSE"}
           </button>
 
-          <div>
+          <div className="hidden sm:block">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+              {routeInfo.scope}
+            </p>
             <h1 className="text-base font-semibold text-slate-900 md:text-lg">
-              {BRAND.systemName}
+              {routeInfo.title}
             </h1>
-            <p className="hidden text-[11px] text-slate-500 md:block">{BRAND.tagline}</p>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white">
+          <span className="hidden rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600 lg:inline-flex">
+            {BRAND.systemName}
+          </span>
+
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white ring-2 ring-slate-200">
             {user?.name?.charAt(0).toUpperCase()}
           </div>
 

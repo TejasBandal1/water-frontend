@@ -8,14 +8,14 @@ const MainLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-transparent">
+    <div className="flex min-h-screen bg-[var(--rr-bg)]">
 
       {/* Sidebar */}
       <div
         className={`
-          fixed inset-y-0 left-0 z-40 
+          fixed inset-y-0 left-0 z-40
           ${collapsed ? "w-20" : "w-64"}
-          bg-slate-950
+          border-r border-slate-800
           transform
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
           transition-all duration-300 ease-in-out
@@ -45,8 +45,10 @@ const MainLayout = () => {
           collapsed={collapsed}
         />
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">
-          <Outlet />
+        <main className="flex-1 overflow-y-auto">
+          <div className="mx-auto w-full max-w-[1540px] px-4 py-5 sm:px-6 lg:px-8">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

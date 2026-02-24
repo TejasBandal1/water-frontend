@@ -3,7 +3,7 @@
 
 :root {
   color-scheme: light;
-  --rr-bg: #f3f5f9;
+  --rr-bg: #eef2f7;
   --rr-surface: #ffffff;
   --rr-surface-soft: #f8fafc;
   --rr-border: #e2e8f0;
@@ -25,8 +25,8 @@ body {
   font-family: "Manrope", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   color: var(--rr-text);
   background:
-    radial-gradient(circle at 0% 0%, #dbe4f2 0%, rgba(219, 228, 242, 0) 48%),
-    radial-gradient(circle at 100% 100%, #c8d4e8 0%, rgba(200, 212, 232, 0) 44%),
+    radial-gradient(circle at 0% 0%, #dce5f3 0%, rgba(220, 229, 243, 0) 44%),
+    radial-gradient(circle at 100% 100%, #d4ddec 0%, rgba(212, 221, 236, 0) 46%),
     var(--rr-bg);
 }
 
@@ -35,27 +35,27 @@ body {
 }
 
 .page-shell {
-  @apply min-h-screen px-4 py-6 sm:px-6 lg:px-10;
+  @apply min-h-[calc(100vh-8rem)] py-1;
 }
 
 .page-hero {
-  @apply mb-6 rounded-3xl border border-slate-200 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 p-6 text-white shadow-xl sm:p-8;
+  @apply mb-6 rounded-3xl border border-slate-700/40 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 p-6 text-white shadow-[0_18px_40px_rgba(15,23,42,0.22)] sm:p-7;
 }
 
 .page-eyebrow {
-  @apply text-xs uppercase tracking-[0.2em] text-slate-300;
+  @apply text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-300;
 }
 
 .page-title {
-  @apply mt-2 text-2xl font-bold sm:text-3xl;
+  @apply mt-2 text-2xl font-bold tracking-tight sm:text-3xl;
 }
 
 .page-subtitle {
-  @apply mt-2 text-sm text-slate-200;
+  @apply mt-2 max-w-3xl text-sm text-slate-200;
 }
 
 .panel {
-  @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+  @apply rounded-2xl border border-slate-200/90 bg-white shadow-[0_6px_22px_rgba(15,23,42,0.06)];
 }
 
 .panel-header {
@@ -67,7 +67,7 @@ body {
 }
 
 .section-title {
-  @apply text-base font-semibold text-slate-900;
+  @apply text-base font-semibold tracking-tight text-slate-900;
 }
 
 .section-subtitle {
@@ -75,7 +75,7 @@ body {
 }
 
 .stat-card {
-  @apply rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md;
+  @apply rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_6px_18px_rgba(15,23,42,0.05)] transition hover:shadow-[0_10px_26px_rgba(15,23,42,0.08)];
 }
 
 .stat-label {
@@ -115,7 +115,7 @@ body {
 }
 
 .table-shell {
-  @apply overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm;
+  @apply overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-[0_8px_24px_rgba(15,23,42,0.06)];
 }
 
 .table-main {
@@ -123,7 +123,7 @@ body {
 }
 
 .table-main thead tr {
-  @apply border-b border-slate-200 bg-slate-100;
+  @apply border-b border-slate-200 bg-slate-100/90;
 }
 
 .table-main th {
