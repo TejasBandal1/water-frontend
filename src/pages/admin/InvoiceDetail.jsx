@@ -14,6 +14,17 @@ const STATUS_STYLES = {
   cancelled: "bg-slate-200 text-slate-700 ring-1 ring-slate-300"
 };
 
+const PAYMENT_METHOD_OPTIONS = [
+  { value: "CASH", label: "Cash" },
+  { value: "UPI", label: "UPI" },
+  { value: "CASH_UPI", label: "Cash + UPI" }
+];
+
+const UPI_ACCOUNT_OPTIONS = [
+  { value: "DKUPI", label: "DKUPI" },
+  { value: "OTHER", label: "Other UPI Account" }
+];
+
 const InvoiceDetail = () => {
   const { invoiceId } = useParams();
   const navigate = useNavigate();
@@ -21,12 +32,17 @@ const InvoiceDetail = () => {
 
   const [data, setData] = useState(null);
   const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("CASH");
+  const [cashSplitAmount, setCashSplitAmount] = useState("");
+  const [upiSplitAmount, setUpiSplitAmount] = useState("");
+  const [upiAccount, setUpiAccount] = useState("DKUPI");
+  const [customUpiAccount, setCustomUpiAccount] = useState("");
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [toast, setToast] = useState("");
 
   const [showPaymentChecklist, setShowPaymentChecklist] = useState(false);
-  const [pendingPaymentAmount, setPendingPaymentAmount] = useState(0);
+  const [pendingPaymentPayload, setPendingPaymentPayload] = useState(null);
   const [paymentChecklist, setPaymentChecklist] = useState({
     pricingReviewed: false,
     amountVerified: false,
@@ -104,11 +120,61 @@ const InvoiceDetail = () => {
     return amount;
   };
 
-  const openPaymentChecklist = () => {
-    const amount = validatePaymentAmount();
-    if (!amount) return;
+  const getResolvedUpiAccount = () =>
+    upiAccount === "OTHER" ? customUpiAccount.trim() : upiAccount;
 
-    setPendingPaymentAmount(amount);
+  const buildPaymentPayload = () => {
+    const amount = validatePaymentAmount();
+    if (!amount) return null;
+
+    const payload = {
+      amount,
+      method: paymentMethod
+    };
+
+    if (paymentMethod === "UPI") {
+      const account = getResolvedUpiAccount();
+      if (!account) {
+        showToast("Select UPI account");
+        return null;
+      }
+      payload.upi_account = account;
+    }
+
+    if (paymentMethod === "CASH_UPI") {
+      const cash = Number(cashSplitAmount);
+      const upi = Number(upiSplitAmount);
+
+      if (!cash || cash <= 0 || !upi || upi <= 0) {
+        showToast("Enter valid cash and UPI split amounts");
+        return null;
+      }
+
+      const splitTotal = Number((cash + upi).toFixed(2));
+      if (splitTotal !== Number(amount.toFixed(2))) {
+        showToast("Cash + UPI split must match total payment amount");
+        return null;
+      }
+
+      const account = getResolvedUpiAccount();
+      if (!account) {
+        showToast("Select UPI account");
+        return null;
+      }
+
+      payload.cash_amount = cash;
+      payload.upi_amount = upi;
+      payload.upi_account = account;
+    }
+
+    return payload;
+  };
+
+  const openPaymentChecklist = () => {
+    const payload = buildPaymentPayload();
+    if (!payload) return;
+
+    setPendingPaymentPayload(payload);
     setPaymentChecklist({
       pricingReviewed: false,
       amountVerified: false,
@@ -117,14 +183,19 @@ const InvoiceDetail = () => {
     setShowPaymentChecklist(true);
   };
 
-  const submitPayment = async (amount) => {
+  const submitPayment = async (payload) => {
     try {
       setProcessing(true);
-      await recordPayment(invoice.id, amount, user.token);
+      await recordPayment(invoice.id, payload, user.token);
       showToast("Payment recorded successfully");
       setPaymentAmount("");
+      setPaymentMethod("CASH");
+      setCashSplitAmount("");
+      setUpiSplitAmount("");
+      setUpiAccount("DKUPI");
+      setCustomUpiAccount("");
       setShowPaymentChecklist(false);
-      setPendingPaymentAmount(0);
+      setPendingPaymentPayload(null);
       fetchData();
     } catch {
       showToast("Failed to record payment");
@@ -140,7 +211,7 @@ const InvoiceDetail = () => {
       return;
     }
 
-    await submitPayment(pendingPaymentAmount);
+    await submitPayment(pendingPaymentPayload);
   };
 
   return (
@@ -227,8 +298,23 @@ const InvoiceDetail = () => {
                     className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
                   >
                     <div>
-                      <p className="text-sm font-medium text-slate-900">Payment #{payment.id}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium text-slate-900">Payment #{payment.id}</p>
+                        <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-700">
+                          {(payment.method || "CASH").replace("_", " + ")}
+                        </span>
+                      </div>
                       <p className="text-xs text-slate-500">{formatLocalDateTime(payment.created_at)}</p>
+                      {(payment.method || "CASH") !== "CASH" && (
+                        <p className="text-xs text-slate-500">
+                          UPI Account: {payment.upi_account || "-"}
+                        </p>
+                      )}
+                      {(payment.method || "CASH") === "CASH_UPI" && (
+                        <p className="text-xs text-slate-500">
+                          Cash: {formatCurrency(payment.cash_amount || 0)} | UPI: {formatCurrency(payment.upi_amount || 0)}
+                        </p>
+                      )}
                     </div>
                     <p className="text-sm font-semibold text-emerald-700">{formatCurrency(payment.amount)}</p>
                   </div>
@@ -276,6 +362,76 @@ const InvoiceDetail = () => {
                 className="mt-4 w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
               />
 
+              <select
+                value={paymentMethod}
+                onChange={(e) => {
+                  const nextMethod = e.target.value;
+                  setPaymentMethod(nextMethod);
+
+                  if (nextMethod !== "CASH_UPI") {
+                    setCashSplitAmount("");
+                    setUpiSplitAmount("");
+                  }
+
+                  if (nextMethod === "CASH") {
+                    setUpiAccount("DKUPI");
+                    setCustomUpiAccount("");
+                  }
+                }}
+                className="mt-3 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              >
+                {PAYMENT_METHOD_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+
+              {paymentMethod === "CASH_UPI" && (
+                <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <input
+                    type="number"
+                    placeholder="Cash amount"
+                    value={cashSplitAmount}
+                    onChange={(e) => setCashSplitAmount(e.target.value)}
+                    className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  />
+                  <input
+                    type="number"
+                    placeholder="UPI amount"
+                    value={upiSplitAmount}
+                    onChange={(e) => setUpiSplitAmount(e.target.value)}
+                    className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  />
+                </div>
+              )}
+
+              {paymentMethod !== "CASH" && (
+                <div className="mt-3 space-y-3">
+                  <select
+                    value={upiAccount}
+                    onChange={(e) => setUpiAccount(e.target.value)}
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  >
+                    {UPI_ACCOUNT_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+
+                  {upiAccount === "OTHER" && (
+                    <input
+                      type="text"
+                      placeholder="Enter UPI account"
+                      value={customUpiAccount}
+                      onChange={(e) => setCustomUpiAccount(e.target.value)}
+                      className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    />
+                  )}
+                </div>
+              )}
+
               <button
                 onClick={openPaymentChecklist}
                 disabled={processing}
@@ -299,7 +455,22 @@ const InvoiceDetail = () => {
           <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
             <h3 className="text-lg font-semibold text-slate-900">Confirm Payment Checklist</h3>
             <p className="mt-2 text-sm text-slate-600">Invoice #{invoice.id} | Client: {invoice.client?.name}</p>
-            <p className="mt-1 text-sm font-semibold text-slate-900">Payment Amount: {formatCurrency(pendingPaymentAmount)}</p>
+            <p className="mt-1 text-sm font-semibold text-slate-900">
+              Payment Amount: {formatCurrency(pendingPaymentPayload?.amount || 0)}
+            </p>
+            <p className="mt-1 text-xs text-slate-500">
+              Method: {(pendingPaymentPayload?.method || "CASH").replace("_", " + ")}
+            </p>
+            {pendingPaymentPayload?.method === "CASH_UPI" && (
+              <p className="mt-1 text-xs text-slate-500">
+                Cash: {formatCurrency(pendingPaymentPayload.cash_amount || 0)} | UPI: {formatCurrency(pendingPaymentPayload.upi_amount || 0)}
+              </p>
+            )}
+            {pendingPaymentPayload?.method !== "CASH" && (
+              <p className="mt-1 text-xs text-slate-500">
+                UPI Account: {pendingPaymentPayload?.upi_account || "-"}
+              </p>
+            )}
 
             <div className="mt-5 space-y-3">
               <ChecklistItem
@@ -327,7 +498,10 @@ const InvoiceDetail = () => {
 
             <div className="mt-6 flex justify-end gap-3">
               <button
-                onClick={() => setShowPaymentChecklist(false)}
+                onClick={() => {
+                  setShowPaymentChecklist(false);
+                  setPendingPaymentPayload(null);
+                }}
                 disabled={processing}
                 className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed"
               >
@@ -335,7 +509,7 @@ const InvoiceDetail = () => {
               </button>
               <button
                 onClick={handleConfirmPayment}
-                disabled={processing || !Object.values(paymentChecklist).every(Boolean)}
+                disabled={processing || !pendingPaymentPayload || !Object.values(paymentChecklist).every(Boolean)}
                 className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
               >
                 {processing ? "Processing..." : "Confirm Payment"}
