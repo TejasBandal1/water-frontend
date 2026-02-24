@@ -12,6 +12,12 @@ import {
 const Users = () => {
   const { user } = useContext(AuthContext);
 
+  const getRoleValue = (u) => {
+    if (!u) return "";
+    if (typeof u.role === "string") return u.role.toLowerCase();
+    return (u.role?.name || "").toLowerCase();
+  };
+
   const [users, setUsers] = useState([]);
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -135,7 +141,7 @@ const Users = () => {
       name: u.name,
       email: u.email,
       password: "",
-      role: u.role?.name,
+      role: getRoleValue(u) || "driver",
       client_id: u.client_id || ""
     });
   };
@@ -158,7 +164,7 @@ const Users = () => {
   /* ================= SUMMARY ================= */
 
   const roleCount = (role) =>
-    users.filter((u) => u.role?.name === role).length;
+    users.filter((u) => getRoleValue(u) === role).length;
 
   const roleBadge = (role) => {
     const styles = {
@@ -328,11 +334,11 @@ const Users = () => {
                   <td className="font-semibold text-slate-900">{u.name}</td>
                   <td>{u.email}</td>
                   <td>
-                    {roleBadge(u.role?.name)}
+                    {roleBadge(getRoleValue(u))}
                   </td>
                   <td>
                     <select
-                      value={u.role?.name}
+                      value={getRoleValue(u)}
                       disabled={u.id === user.id}
                       onChange={(e) =>
                         handleRoleChange(u.id, e.target.value)
