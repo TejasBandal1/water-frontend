@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -15,8 +15,8 @@ import {
   YAxis
 } from "recharts";
 import {
-  getContainerLoss,
   getClients,
+  getContainerLoss,
   getMonthlyRevenue,
   getOutstanding
 } from "../../api/admin";
@@ -29,27 +29,29 @@ const Analytics = () => {
   const [toDate, setToDate] = useState("");
   const [selectedClientId, setSelectedClientId] = useState("");
 
+  const [clientSearch, setClientSearch] = useState("");
+  const [showClientOptions, setShowClientOptions] = useState(false);
+
   const [summary, setSummary] = useState({});
   const [revenueData, setRevenueData] = useState([]);
   const [containerData, setContainerData] = useState([]);
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadClients();
-    fetchData();
-  }, []);
-
-  const loadClients = async () => {
+  const loadClients = useCallback(async () => {
     try {
       const data = await getClients();
       setClients((data || []).filter((client) => client.is_active !== false));
     } catch (err) {
       console.error("Failed to load clients for analytics:", err);
     }
-  };
+  }, []);
 
-  const fetchData = async () => {
+  useEffect(() => {
+    loadClients();
+  }, [loadClients]);
+
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const clientId = selectedClientId ? Number(selectedClientId) : undefined;
@@ -68,10 +70,34 @@ const Analytics = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [period, fromDate, toDate, selectedClientId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const formatCurrency = (value) =>
     `Rs. ${Number(value || 0).toLocaleString("en-IN")}`;
+
+  const selectedClient = useMemo(
+    () => clients.find((client) => String(client.id) === String(selectedClientId)) || null,
+    [clients, selectedClientId]
+  );
+
+  const clientLabel = selectedClient ? selectedClient.name : "All Clients";
+
+  const filteredClientOptions = useMemo(() => {
+    const query = clientSearch.trim().toLowerCase();
+    if (!query) return clients.slice(0, 8);
+
+    return clients
+      .filter((client) => {
+        const name = (client.name || "").toLowerCase();
+        const email = (client.email || "").toLowerCase();
+        return name.includes(query) || email.includes(query);
+      })
+      .slice(0, 8);
+  }, [clients, clientSearch]);
 
   const totalRevenue = useMemo(
     () => revenueData.reduce((sum, row) => sum + Number(row.revenue || 0), 0),
@@ -119,13 +145,6 @@ const Analytics = () => {
     revenueData.length > 0
       ? totalRevenue / revenueData.length
       : 0;
-
-  const selectedClient = useMemo(
-    () => clients.find((client) => String(client.id) === String(selectedClientId)) || null,
-    [clients, selectedClientId]
-  );
-
-  const clientLabel = selectedClient ? selectedClient.name : "All Clients";
 
   const revenueSeries = useMemo(
     () =>
@@ -197,18 +216,70 @@ const Analytics = () => {
               <option value="yearly">Yearly</option>
             </select>
 
-            <select
-              value={selectedClientId}
-              onChange={(e) => setSelectedClientId(e.target.value)}
-              className="rounded-xl border border-slate-500 bg-slate-800/80 px-3 py-2 text-sm text-white outline-none ring-0 transition focus:border-blue-400"
-            >
-              <option value="">All Clients</option>
-              {clients.map((client) => (
-                <option key={client.id} value={client.id}>
-                  {client.name}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <input
+                type="text"
+                value={clientSearch}
+                onFocus={() => setShowClientOptions(true)}
+                onBlur={() => window.setTimeout(() => setShowClientOptions(false), 120)}
+                onChange={(e) => {
+                  setClientSearch(e.target.value);
+                  setShowClientOptions(true);
+                }}
+                placeholder={selectedClient ? selectedClient.name : "Search client..."}
+                className="w-full rounded-xl border border-slate-500 bg-slate-800/80 px-3 py-2 pr-20 text-sm text-white outline-none transition focus:border-blue-400"
+              />
+
+              {(selectedClientId || clientSearch) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedClientId("");
+                    setClientSearch("");
+                    setShowClientOptions(false);
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md bg-slate-700/80 px-2 py-1 text-xs font-semibold text-slate-200 transition hover:bg-slate-600"
+                >
+                  Clear
+                </button>
+              )}
+
+              {showClientOptions && (
+                <div className="absolute z-30 mt-2 max-h-72 w-full overflow-y-auto rounded-xl border border-slate-300 bg-white shadow-xl">
+                  <button
+                    type="button"
+                    onMouseDown={() => {
+                      setSelectedClientId("");
+                      setClientSearch("");
+                      setShowClientOptions(false);
+                    }}
+                    className="block w-full border-b border-slate-100 px-3 py-2 text-left text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                  >
+                    All Clients
+                  </button>
+
+                  {filteredClientOptions.length === 0 ? (
+                    <p className="px-3 py-2 text-sm text-slate-500">No clients found</p>
+                  ) : (
+                    filteredClientOptions.map((client) => (
+                      <button
+                        key={client.id}
+                        type="button"
+                        onMouseDown={() => {
+                          setSelectedClientId(String(client.id));
+                          setClientSearch(client.name || "");
+                          setShowClientOptions(false);
+                        }}
+                        className="block w-full border-b border-slate-100 px-3 py-2 text-left last:border-b-0 hover:bg-slate-50"
+                      >
+                        <p className="text-sm font-semibold text-slate-900">{client.name}</p>
+                        <p className="text-xs text-slate-500">{client.email || "No email"}</p>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
 
             <input
               type="date"
@@ -225,10 +296,16 @@ const Analytics = () => {
             />
 
             <button
-              onClick={fetchData}
+              onClick={() => {
+                setPeriod("monthly");
+                setFromDate("");
+                setToDate("");
+                setSelectedClientId("");
+                setClientSearch("");
+              }}
               className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
             >
-              Apply Filters
+              Reset Filters
             </button>
           </div>
         </div>
