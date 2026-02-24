@@ -190,13 +190,13 @@ const Invoices = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-6 sm:px-6 lg:px-10">
-      <section className="mb-6 rounded-3xl border border-slate-200 bg-gradient-to-r from-slate-900 via-slate-800 to-blue-900 p-6 text-white shadow-xl sm:p-8">
+    <div className="page-shell">
+      <section className="page-hero">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-300">Billing</p>
-            <h1 className="mt-2 text-2xl font-bold sm:text-3xl">Invoice Management</h1>
-            <p className="mt-2 text-sm text-slate-200">Track draft, active, paid, and corrected invoices with full audit safety.</p>
+            <p className="page-eyebrow">Billing</p>
+            <h1 className="page-title">Invoice Management</h1>
+            <p className="page-subtitle">Track draft, active, paid, and corrected invoices with full audit safety.</p>
           </div>
 
           <button
@@ -210,7 +210,7 @@ const Invoices = () => {
                 requiresReason: false
               })
             }
-            className="rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
+            className="btn-secondary bg-white px-5 py-2.5 text-slate-900 hover:bg-slate-100"
           >
             Generate Drafts
           </button>
@@ -224,14 +224,14 @@ const Invoices = () => {
         <SummaryCard title="Overdue Invoices" value={overdueCount} tone="red" />
       </section>
 
-      <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <section className="panel mb-6 p-5">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-6">
           <FilterField label="Search">
             <input
               placeholder="Invoice ID or client"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              className="form-input"
             />
           </FilterField>
 
@@ -239,7 +239,7 @@ const Invoices = () => {
             <select
               value={selectedClient}
               onChange={(e) => setSelectedClient(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              className="form-select"
             >
               <option value="all">All Clients</option>
               {clients.map((c) => (
@@ -254,7 +254,7 @@ const Invoices = () => {
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              className="form-select"
             >
               <option value="all">All Status</option>
               <option value="draft">Draft</option>
@@ -270,7 +270,7 @@ const Invoices = () => {
               type="date"
               value={fromDate}
               onChange={(e) => setFromDate(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              className="form-input"
             />
           </FilterField>
 
@@ -279,14 +279,14 @@ const Invoices = () => {
               type="date"
               value={toDate}
               onChange={(e) => setToDate(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              className="form-input"
             />
           </FilterField>
 
           <FilterField label="Actions">
             <button
               onClick={resetFilters}
-              className="w-full rounded-lg bg-slate-100 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-200"
+              className="btn-secondary w-full"
             >
               Reset Filters
             </button>
@@ -294,24 +294,24 @@ const Invoices = () => {
         </div>
       </section>
 
-      <section className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <section className="table-shell">
         {loading ? (
           <div className="flex justify-center py-20">
             <div className="h-10 w-10 animate-spin rounded-full border-4 border-black border-t-transparent"></div>
           </div>
         ) : paginatedInvoices.length === 0 ? (
-          <div className="py-20 text-center text-slate-400">No invoices found for selected filters.</div>
+          <div className="empty-state">No invoices found for selected filters.</div>
         ) : (
-          <table className="min-w-full text-left">
-            <thead className="sticky top-0 border-b border-slate-200 bg-slate-100/90 backdrop-blur">
+          <table className="table-main">
+            <thead>
               <tr>
-                <th className="px-4 py-3 text-xs uppercase tracking-wide text-slate-600">Invoice</th>
-                <th className="px-4 py-3 text-xs uppercase tracking-wide text-slate-600">Client</th>
-                <th className="px-4 py-3 text-xs uppercase tracking-wide text-slate-600">Created</th>
-                <th className="px-4 py-3 text-xs uppercase tracking-wide text-slate-600">Total</th>
-                <th className="px-4 py-3 text-xs uppercase tracking-wide text-slate-600">Balance</th>
-                <th className="px-4 py-3 text-xs uppercase tracking-wide text-slate-600">Status</th>
-                <th className="px-4 py-3 text-xs uppercase tracking-wide text-slate-600">Actions</th>
+                <th>Invoice</th>
+                <th>Client</th>
+                <th>Created</th>
+                <th>Total</th>
+                <th>Balance</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
 
@@ -323,20 +323,20 @@ const Invoices = () => {
                   Number(inv.amount_paid || 0) === 0;
 
                 return (
-                  <tr key={inv.id} className="border-b border-slate-100 transition hover:bg-slate-50">
-                    <td className="px-4 py-3 font-semibold text-slate-900">#{inv.id}</td>
-                    <td className="px-4 py-3 text-slate-700">{inv.client_name}</td>
-                    <td className="px-4 py-3 text-slate-600">{formatDate(inv.created_at)}</td>
-                    <td className="px-4 py-3 font-semibold text-slate-800">{formatCurrency(inv.total_amount)}</td>
-                    <td className={`px-4 py-3 font-semibold ${balance > 0 ? "text-red-600" : "text-emerald-600"}`}>
+                  <tr key={inv.id}>
+                    <td className="font-semibold text-slate-900">#{inv.id}</td>
+                    <td>{inv.client_name}</td>
+                    <td className="text-slate-600">{formatDate(inv.created_at)}</td>
+                    <td className="font-semibold text-slate-800">{formatCurrency(inv.total_amount)}</td>
+                    <td className={`font-semibold ${balance > 0 ? "text-red-600" : "text-emerald-600"}`}>
                       {formatCurrency(balance)}
                     </td>
-                    <td className="px-4 py-3">
+                    <td>
                       <span className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS_STYLES[inv.status] || "bg-slate-100 text-slate-700"}`}>
                         {inv.status.toUpperCase()}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td>
                       <div className="flex flex-wrap gap-2">
                         <Link
                           to={`/admin/invoices/${inv.id}`}
@@ -444,7 +444,7 @@ const Invoices = () => {
       )}
 
       {toast && (
-        <div className="fixed bottom-6 right-6 rounded-xl bg-slate-900 px-6 py-3 text-white shadow-xl">
+        <div className="toast">
           {toast}
         </div>
       )}
@@ -461,8 +461,8 @@ const SummaryCard = ({ title, value, tone }) => {
   };
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</p>
+    <div className="stat-card">
+      <p className="stat-label">{title}</p>
       <p className={`mt-2 text-2xl font-bold ${toneStyles[tone] || "text-slate-900"}`}>{value}</p>
     </div>
   );
@@ -470,7 +470,7 @@ const SummaryCard = ({ title, value, tone }) => {
 
 const FilterField = ({ label, children }) => (
   <div>
-    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</label>
+    <label className="form-label">{label}</label>
     {children}
   </div>
 );
@@ -501,7 +501,7 @@ const ActionModal = ({
             value={reason}
             onChange={(e) => onReasonChange(e.target.value)}
             placeholder="Enter reason for audit history"
-            className="w-full rounded-xl border border-slate-300 p-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+            className="form-textarea"
           />
         </div>
       )}

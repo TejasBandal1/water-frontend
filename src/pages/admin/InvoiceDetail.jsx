@@ -86,7 +86,7 @@ const InvoiceDetail = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="flex min-h-[70vh] items-center justify-center">
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-black border-t-transparent"></div>
       </div>
     );
@@ -215,18 +215,18 @@ const InvoiceDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-6 sm:px-6 lg:px-10">
-      <section className="mb-6 rounded-3xl border border-slate-200 bg-gradient-to-r from-slate-900 via-slate-800 to-blue-900 p-6 text-white shadow-xl sm:p-8">
+    <div className="page-shell">
+      <section className="page-hero">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <button
               onClick={() => navigate("/admin/invoices")}
-              className="mb-3 rounded-lg bg-white/15 px-3 py-1 text-xs font-semibold tracking-wide text-white transition hover:bg-white/25"
+              className="mb-3 rounded-lg border border-white/25 bg-white/10 px-3 py-1 text-xs font-semibold tracking-wide text-white transition hover:bg-white/20"
             >
               Back to Invoices
             </button>
-            <h1 className="text-2xl font-bold sm:text-3xl">Invoice #{invoice.id}</h1>
-            <p className="mt-2 text-sm text-slate-200">
+            <h1 className="page-title">Invoice #{invoice.id}</h1>
+            <p className="page-subtitle">
               Created on {formatLocalDate(invoice.created_at)}
             </p>
           </div>
@@ -248,8 +248,8 @@ const InvoiceDetail = () => {
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         <div className="space-y-6 xl:col-span-2">
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-base font-semibold text-slate-900">Bill To</h2>
+          <section className="panel p-6">
+            <h2 className="section-title">Bill To</h2>
             <div className="mt-3 space-y-1 text-sm text-slate-700">
               <p className="font-semibold text-slate-900">{invoice.client?.name}</p>
               <p>{invoice.client?.email || "-"}</p>
@@ -257,27 +257,27 @@ const InvoiceDetail = () => {
             </div>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-base font-semibold text-slate-900">Container Breakdown</h2>
+          <section className="panel p-6">
+            <h2 className="section-title">Container Breakdown</h2>
 
-            <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200">
-              <table className="min-w-full text-left">
-                <thead className="border-b border-slate-200 bg-slate-100">
+            <div className="table-shell mt-4">
+              <table className="table-main">
+                <thead>
                   <tr>
-                    <th className="px-4 py-3 text-xs uppercase tracking-wide text-slate-600">Container</th>
-                    <th className="px-4 py-3 text-xs uppercase tracking-wide text-slate-600">Qty</th>
-                    <th className="px-4 py-3 text-xs uppercase tracking-wide text-slate-600">Price</th>
-                    <th className="px-4 py-3 text-xs uppercase tracking-wide text-slate-600">Total</th>
+                    <th>Container</th>
+                    <th>Qty</th>
+                    <th>Price</th>
+                    <th>Total</th>
                   </tr>
                 </thead>
 
                 <tbody>
                   {items.map((item) => (
-                    <tr key={item.id} className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50">
-                      <td className="px-4 py-3 text-sm font-medium text-slate-900">{item.container?.name}</td>
-                      <td className="px-4 py-3 text-sm text-slate-700">{item.quantity}</td>
-                      <td className="px-4 py-3 text-sm text-slate-700">{formatCurrency(item.price_snapshot)}</td>
-                      <td className="px-4 py-3 text-sm font-semibold text-slate-900">{formatCurrency(item.total)}</td>
+                    <tr key={item.id}>
+                      <td className="text-sm font-medium text-slate-900">{item.container?.name}</td>
+                      <td>{item.quantity}</td>
+                      <td>{formatCurrency(item.price_snapshot)}</td>
+                      <td className="font-semibold text-slate-900">{formatCurrency(item.total)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -285,8 +285,8 @@ const InvoiceDetail = () => {
             </div>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-base font-semibold text-slate-900">Payment History</h2>
+          <section className="panel p-6">
+            <h2 className="section-title">Payment History</h2>
 
             {payments.length === 0 ? (
               <p className="mt-3 text-sm text-slate-500">No payments recorded yet.</p>
@@ -325,8 +325,8 @@ const InvoiceDetail = () => {
         </div>
 
         <div className="space-y-6">
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm xl:sticky xl:top-6">
-            <h2 className="text-base font-semibold text-slate-900">Payment Summary</h2>
+          <section className="panel p-6 xl:sticky xl:top-6">
+            <h2 className="section-title">Payment Summary</h2>
 
             <div className="mt-4 space-y-3 text-sm">
               <Row label="Total" value={formatCurrency(invoice.total_amount)} />
@@ -350,8 +350,8 @@ const InvoiceDetail = () => {
           </section>
 
           {isPaymentAllowed && (
-            <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="text-base font-semibold text-slate-900">Record Payment</h2>
+            <section className="panel p-6">
+              <h2 className="section-title">Record Payment</h2>
               <p className="mt-1 text-xs text-slate-500">Use checklist confirmation to avoid incorrect entries.</p>
 
               <input
@@ -359,7 +359,7 @@ const InvoiceDetail = () => {
                 placeholder="Enter amount"
                 value={paymentAmount}
                 onChange={(e) => setPaymentAmount(e.target.value)}
-                className="mt-4 w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                className="form-input mt-4"
               />
 
               <select
@@ -378,7 +378,7 @@ const InvoiceDetail = () => {
                     setCustomUpiAccount("");
                   }
                 }}
-                className="mt-3 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                className="form-select mt-3"
               >
                 {PAYMENT_METHOD_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -394,14 +394,14 @@ const InvoiceDetail = () => {
                     placeholder="Cash amount"
                     value={cashSplitAmount}
                     onChange={(e) => setCashSplitAmount(e.target.value)}
-                    className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    className="form-input"
                   />
                   <input
                     type="number"
                     placeholder="UPI amount"
                     value={upiSplitAmount}
                     onChange={(e) => setUpiSplitAmount(e.target.value)}
-                    className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    className="form-input"
                   />
                 </div>
               )}
@@ -411,7 +411,7 @@ const InvoiceDetail = () => {
                   <select
                     value={upiAccount}
                     onChange={(e) => setUpiAccount(e.target.value)}
-                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    className="form-select"
                   >
                     {UPI_ACCOUNT_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -426,7 +426,7 @@ const InvoiceDetail = () => {
                       placeholder="Enter UPI account"
                       value={customUpiAccount}
                       onChange={(e) => setCustomUpiAccount(e.target.value)}
-                      className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                      className="form-input"
                     />
                   )}
                 </div>
@@ -435,7 +435,7 @@ const InvoiceDetail = () => {
               <button
                 onClick={openPaymentChecklist}
                 disabled={processing}
-                className="mt-4 w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+                className="btn-primary mt-4 w-full bg-emerald-600 hover:bg-emerald-700"
               >
                 {processing ? "Processing..." : "Review & Confirm Payment"}
               </button>
@@ -445,7 +445,7 @@ const InvoiceDetail = () => {
       </div>
 
       {toast && (
-        <div className="fixed bottom-6 right-6 rounded-xl bg-slate-900 px-6 py-3 text-sm text-white shadow-xl">
+        <div className="toast">
           {toast}
         </div>
       )}
