@@ -26,7 +26,8 @@ const Containers = () => {
 
   const [form, setForm] = useState({
     name: "",
-    description: ""
+    description: "",
+    is_returnable: true
   });
 
   useEffect(() => {
@@ -69,7 +70,7 @@ const Containers = () => {
         showToast("Container created");
       }
 
-      setForm({ name: "", description: "" });
+      setForm({ name: "", description: "", is_returnable: true });
       setEditingContainer(null);
       setShowModal(false);
       fetchContainers();
@@ -127,7 +128,7 @@ const Containers = () => {
           <button
             onClick={() => {
               setEditingContainer(null);
-              setForm({ name: "", description: "" });
+              setForm({ name: "", description: "", is_returnable: true });
               setShowModal(true);
             }}
             className="btn-secondary bg-white text-slate-900 hover:bg-slate-100"
@@ -181,6 +182,7 @@ const Containers = () => {
                 <tr>
                   <th>Name</th>
                   <th>Description</th>
+                  <th>Return Tracking</th>
                   <th>Status</th>
                   <th className="text-right">Actions</th>
                 </tr>
@@ -199,6 +201,18 @@ const Containers = () => {
                     </td>
 
                     <td>
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                          c.is_returnable !== false
+                            ? "bg-sky-100 text-sky-700"
+                            : "bg-slate-200 text-slate-600"
+                        }`}
+                      >
+                        {c.is_returnable !== false ? "Tracked" : "Not Tracked"}
+                      </span>
+                    </td>
+
+                    <td>
                       <StatusBadge active={c.is_active} />
                     </td>
 
@@ -208,7 +222,8 @@ const Containers = () => {
                           setEditingContainer(c);
                           setForm({
                             name: c.name,
-                            description: c.description || ""
+                            description: c.description || "",
+                            is_returnable: c.is_returnable !== false
                           });
                           setShowModal(true);
                         }}
@@ -277,6 +292,25 @@ const Containers = () => {
               setForm({ ...form, description: e.target.value })
             }
           />
+
+          <label className="mb-4 flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <input
+              type="checkbox"
+              checked={form.is_returnable}
+              onChange={(e) =>
+                setForm({ ...form, is_returnable: e.target.checked })
+              }
+              className="h-4 w-4"
+            />
+            <div>
+              <p className="text-sm font-semibold text-slate-900">
+                Track Returns
+              </p>
+              <p className="text-xs text-slate-600">
+                Enable return quantity tracking for this container.
+              </p>
+            </div>
+          </label>
 
           <div className="flex justify-end gap-3 mt-6">
             <button

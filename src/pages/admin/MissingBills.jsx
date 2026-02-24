@@ -69,6 +69,13 @@ const MissingBills = () => {
 
   const setQty = (index, field, value) => {
     const updated = [...quantities];
+
+    if (field === "returned_qty" && containers[index]?.is_returnable === false) {
+      updated[index][field] = 0;
+      setQuantities(updated);
+      return;
+    }
+
     updated[index][field] = Math.max(0, Number(value || 0));
     setQuantities(updated);
   };
@@ -79,8 +86,16 @@ const MissingBills = () => {
   );
 
   const totalReturned = useMemo(
-    () => quantities.reduce((sum, q) => sum + Number(q.returned_qty || 0), 0),
-    [quantities]
+    () =>
+      quantities.reduce(
+        (sum, q, index) =>
+          sum +
+          (containers[index]?.is_returnable === false
+            ? 0
+            : Number(q.returned_qty || 0)),
+        0
+      ),
+    [quantities, containers]
   );
 
   const hasAnyQty = totalDelivered > 0 || totalReturned > 0;
@@ -262,13 +277,22 @@ const MissingBills = () => {
                 </div>
                 <div>
                   <label className="mb-1 block text-xs text-slate-500">Returned</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={quantities[index]?.returned_qty || 0}
-                    onChange={(e) => setQty(index, "returned_qty", e.target.value)}
-                    className="form-input"
-                  />
+                  {container.is_returnable === false ? (
+                    <input
+                      type="text"
+                      value="Not tracked"
+                      disabled
+                      className="form-input cursor-not-allowed bg-slate-100 text-slate-500"
+                    />
+                  ) : (
+                    <input
+                      type="number"
+                      min="0"
+                      value={quantities[index]?.returned_qty || 0}
+                      onChange={(e) => setQty(index, "returned_qty", e.target.value)}
+                      className="form-input"
+                    />
+                  )}
                 </div>
               </div>
             </div>
