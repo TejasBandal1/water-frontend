@@ -158,6 +158,7 @@ const Analytics = () => {
   const totalUpiCollected = Number(paymentSummary.total_upi_amount || 0);
   const totalMixedTransactions = Number(paymentSummary.cash_upi_count || 0);
   const totalPaymentsCount = Number(paymentSummary.payment_count || 0);
+  const totalCollectedAmount = Number(paymentSummary.total_amount || 0);
 
   const paymentChannelPieData = useMemo(() => {
     const data = [
@@ -178,6 +179,36 @@ const Analytics = () => {
       })),
     [paymentByClient]
   );
+
+  const paymentMethodSummaryRows = useMemo(() => {
+    const safeTotal = totalCollectedAmount > 0 ? totalCollectedAmount : 1;
+
+    return paymentByMethod.map((row) => ({
+      ...row,
+      label: formatMethodLabel(row.method),
+      share: Number((((Number(row.amount || 0) / safeTotal) * 100)).toFixed(1))
+    }));
+  }, [paymentByMethod, totalCollectedAmount]);
+
+  const topClientByCollection = paymentByClient.length > 0 ? paymentByClient[0] : null;
+
+  const activeRangeLabel = useMemo(() => {
+    if (fromDate && toDate) return `${fromDate} to ${toDate}`;
+    if (fromDate) return `From ${fromDate}`;
+    if (toDate) return `Up to ${toDate}`;
+    return "All time";
+  }, [fromDate, toDate]);
+
+  const cashShare = totalCollectedAmount > 0
+    ? Number(((totalCashCollected / totalCollectedAmount) * 100).toFixed(1))
+    : 0;
+
+  const upiShare = totalCollectedAmount > 0
+    ? Number(((totalUpiCollected / totalCollectedAmount) * 100).toFixed(1))
+    : 0;
+
+  const dominantPaymentChannel = cashShare >= upiShare ? "Cash" : "UPI";
+  const dominantPaymentShare = Math.max(cashShare, upiShare);
 
   const returnEfficiency =
     totalDelivered > 0
@@ -232,26 +263,35 @@ const Analytics = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-6 sm:px-6 lg:px-10">
-      <section className="mb-8 rounded-3xl border border-slate-200 bg-gradient-to-r from-slate-900 via-slate-800 to-blue-900 p-6 text-white shadow-xl sm:p-8">
+    <div className="page-shell">
+      <section className="page-hero">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-300">
+            <p className="page-eyebrow">
               Analytics Suite
             </p>
-            <h1 className="mt-2 text-2xl font-bold sm:text-3xl">
+            <h1 className="page-title">
               Business Intelligence Dashboard
             </h1>
-            <p className="mt-2 text-sm text-slate-200">
+            <p className="page-subtitle">
               Revenue, payment health, and container circulation for {clientLabel}.
             </p>
           </div>
+          <div className="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-xs text-slate-200">
+            <p className="font-semibold uppercase tracking-wide text-slate-200">Active Filters</p>
+            <p className="mt-1">
+              Client: <span className="font-semibold text-white">{clientLabel}</span> | Period: <span className="font-semibold text-white">{period}</span> | Range: <span className="font-semibold text-white">{activeRangeLabel}</span>
+            </p>
+          </div>
+        </div>
+      </section>
 
-          <div className="grid w-full gap-3 sm:grid-cols-2 lg:w-auto lg:grid-cols-5">
+      <section className="panel mb-8 p-5">
+        <div className="grid w-full gap-3 sm:grid-cols-2 lg:grid-cols-5">
             <select
               value={period}
               onChange={(e) => setPeriod(e.target.value)}
-              className="rounded-xl border border-slate-500 bg-slate-800/80 px-3 py-2 text-sm text-white outline-none ring-0 transition focus:border-blue-400"
+              className="form-select"
             >
               <option value="daily">Daily</option>
               <option value="weekly">Weekly</option>
@@ -270,7 +310,7 @@ const Analytics = () => {
                   setShowClientOptions(true);
                 }}
                 placeholder={selectedClient ? selectedClient.name : "Search client..."}
-                className="w-full rounded-xl border border-slate-500 bg-slate-800/80 px-3 py-2 pr-20 text-sm text-white outline-none transition focus:border-blue-400"
+                className="form-input pr-20"
               />
 
               {(selectedClientId || clientSearch) && (
@@ -281,7 +321,7 @@ const Analytics = () => {
                     setClientSearch("");
                     setShowClientOptions(false);
                   }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md bg-slate-700/80 px-2 py-1 text-xs font-semibold text-slate-200 transition hover:bg-slate-600"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
                 >
                   Clear
                 </button>
@@ -328,14 +368,14 @@ const Analytics = () => {
               type="date"
               value={fromDate}
               onChange={(e) => setFromDate(e.target.value)}
-              className="rounded-xl border border-slate-500 bg-slate-800/80 px-3 py-2 text-sm text-white outline-none transition focus:border-blue-400"
+              className="form-input"
             />
 
             <input
               type="date"
               value={toDate}
               onChange={(e) => setToDate(e.target.value)}
-              className="rounded-xl border border-slate-500 bg-slate-800/80 px-3 py-2 text-sm text-white outline-none transition focus:border-blue-400"
+              className="form-input"
             />
 
             <button
@@ -346,12 +386,11 @@ const Analytics = () => {
                 setSelectedClientId("");
                 setClientSearch("");
               }}
-              className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
+              className="btn-secondary"
             >
               Reset Filters
             </button>
           </div>
-        </div>
       </section>
 
       <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -366,6 +405,33 @@ const Analytics = () => {
         <KpiCard title="UPI Collected" value={formatCurrency(totalUpiCollected)} trend="up" subtitle="Payments received via UPI" />
         <KpiCard title="Mixed Payments" value={totalMixedTransactions} trend="neutral" subtitle="Cash + UPI transactions" />
         <KpiCard title="Payment Entries" value={totalPaymentsCount} trend="neutral" subtitle={`Recorded payments | ${clientLabel}`} />
+      </section>
+
+      <section className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <InsightCard
+          title="Collection Health"
+          value={`${collectionRate}%`}
+          note={collectionRate >= 80 ? "Strong collection conversion." : "Collection needs follow-up."}
+          tone={collectionRate >= 80 ? "up" : "warn"}
+        />
+        <InsightCard
+          title="Dominant Payment Channel"
+          value={`${dominantPaymentChannel} (${dominantPaymentShare}%)`}
+          note={`Cash share ${cashShare}% | UPI share ${upiShare}%`}
+          tone="neutral"
+        />
+        <InsightCard
+          title="Top Paying Client"
+          value={topClientByCollection ? topClientByCollection.client_name : "No data"}
+          note={topClientByCollection ? `${formatCurrency(topClientByCollection.total_amount)} collected` : "No payment records in selected range"}
+          tone="up"
+        />
+        <InsightCard
+          title="Return Efficiency"
+          value={`${returnEfficiency}%`}
+          note={`${totalContainersOutside} containers still outside`}
+          tone={returnEfficiency >= 70 ? "up" : "warn"}
+        />
       </section>
 
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
@@ -543,6 +609,40 @@ const Analytics = () => {
 
       <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-base font-semibold text-slate-900">Payment Method Register</h2>
+          <p className="text-xs text-slate-500">Method-wise amount share and transaction volume</p>
+        </div>
+
+        {paymentMethodSummaryRows.length === 0 ? (
+          <div className="empty-state">No method-level payment data for selected filters.</div>
+        ) : (
+          <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200">
+            <table className="table-main min-w-[760px]">
+              <thead>
+                <tr>
+                  <th>Method</th>
+                  <th>Amount</th>
+                  <th>Share</th>
+                  <th>Transactions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paymentMethodSummaryRows.map((row) => (
+                  <tr key={row.method}>
+                    <td className="font-semibold text-slate-900">{row.label}</td>
+                    <td>{formatCurrency(row.amount)}</td>
+                    <td>{row.share}%</td>
+                    <td>{row.count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-base font-semibold text-slate-900">Financial Snapshot</h2>
           <p className="text-xs text-slate-500">Auto-calculated from confirmed invoices and trip logs | {clientLabel}</p>
         </div>
@@ -678,9 +778,32 @@ const EmptyState = ({ message }) => (
   </div>
 );
 
+const InsightCard = ({ title, value, note, tone = "neutral" }) => {
+  const toneStyles = {
+    up: "text-emerald-700",
+    warn: "text-amber-700",
+    neutral: "text-slate-900"
+  };
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</p>
+      <p className={`mt-2 text-xl font-bold ${toneStyles[tone]}`}>{value}</p>
+      <p className="mt-2 text-xs text-slate-500">{note}</p>
+    </div>
+  );
+};
+
 const truncateName = (name) => {
   if (!name) return "-";
   return name.length > 16 ? `${name.slice(0, 16)}...` : name;
+};
+
+const formatMethodLabel = (method) => {
+  if (!method) return "Cash";
+  if (method === "CASH_UPI") return "Cash + UPI";
+  if (method === "UPI") return "UPI";
+  return "Cash";
 };
 
 export default Analytics;
