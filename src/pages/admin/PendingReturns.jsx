@@ -3,9 +3,11 @@ import { getPendingReturns } from "../../api/admin";
 
 const PendingReturns = () => {
   const [rows, setRows] = useState([]);
+  const [allRows, setAllRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
+  const [showClientDropdown, setShowClientDropdown] = useState(false);
   const [toast, setToast] = useState("");
 
   useEffect(() => {
@@ -15,8 +17,12 @@ const PendingReturns = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const data = await getPendingReturns(appliedSearch);
-      setRows(data || []);
+      const [filteredData, fullData] = await Promise.all([
+        getPendingReturns(appliedSearch),
+        getPendingReturns()
+      ]);
+      setRows(filteredData || []);
+      setAllRows(fullData || []);
     } catch {
       showToast("Failed to load pending return data");
     } finally {
@@ -38,6 +44,18 @@ const PendingReturns = () => {
     () => rows.reduce((sum, row) => sum + Number(row.containers?.length || 0), 0),
     [rows]
   );
+  const clientSuggestions = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    const list = allRows || [];
+
+    if (!term) {
+      return list.slice(0, 8);
+    }
+
+    return list
+      .filter((row) => row.client_name?.toLowerCase().includes(term))
+      .slice(0, 8);
+  }, [allRows, search]);
 
   return (
     <div className="page-shell">
@@ -82,10 +100,18 @@ const PendingReturns = () => {
               type="text"
               placeholder="Search by client name..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onFocus={() => setShowClientDropdown(true)}
+              onBlur={() => {
+                window.setTimeout(() => setShowClientDropdown(false), 120);
+              }}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setShowClientDropdown(true);
+              }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   setAppliedSearch(search.trim());
+                  setShowClientDropdown(false);
                 }
               }}
               className="form-input w-full pl-10 pr-20"
@@ -95,11 +121,40 @@ const PendingReturns = () => {
                 type="button"
                 onClick={() => {
                   setSearch("");
+                  setShowClientDropdown(false);
                 }}
                 className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-50"
               >
                 Clear
               </button>
+            )}
+
+            {showClientDropdown && (
+              <div className="absolute z-20 mt-2 max-h-72 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg">
+                {clientSuggestions.length === 0 ? (
+                  <p className="px-4 py-3 text-sm text-slate-500">
+                    No pending-return clients found.
+                  </p>
+                ) : (
+                  clientSuggestions.map((client) => (
+                    <button
+                      key={client.client_id}
+                      type="button"
+                      onMouseDown={() => {
+                        setSearch(client.client_name);
+                        setAppliedSearch(client.client_name);
+                        setShowClientDropdown(false);
+                      }}
+                      className="block w-full border-b border-slate-100 px-4 py-3 text-left last:border-b-0 hover:bg-slate-50"
+                    >
+                      <p className="text-sm font-semibold text-slate-900">{client.client_name}</p>
+                      <p className="text-xs text-slate-500">
+                        Pending units: {Number(client.total_pending_return || 0)}
+                      </p>
+                    </button>
+                  ))
+                )}
+              </div>
             )}
           </div>
 
@@ -115,6 +170,7 @@ const PendingReturns = () => {
             onClick={() => {
               setSearch("");
               setAppliedSearch("");
+              setShowClientDropdown(false);
             }}
             className="btn-secondary whitespace-nowrap px-5 py-2.5"
           >
