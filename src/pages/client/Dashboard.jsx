@@ -3,6 +3,9 @@ import { AuthContext } from "../../context/AuthContext";
 import { getMyInvoices, getMyBalance } from "../../api/client";
 import { formatLocalDate } from "../../utils/dateTime";
 
+const OUTSTANDING_STATUSES = ["pending", "partial", "overdue"];
+const BILLABLE_STATUSES = ["pending", "partial", "overdue", "paid"];
+
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
 
@@ -49,7 +52,7 @@ const Dashboard = () => {
 
   const totalOutstanding = useMemo(() => {
     return invoices
-      .filter((i) => i.status !== "paid")
+      .filter((i) => OUTSTANDING_STATUSES.includes((i.status || "").toLowerCase()))
       .reduce(
         (sum, i) =>
           sum +
@@ -60,10 +63,12 @@ const Dashboard = () => {
   }, [invoices]);
 
   const totalPaid = useMemo(() => {
-    return invoices.reduce(
+    return invoices
+      .filter((i) => BILLABLE_STATUSES.includes((i.status || "").toLowerCase()))
+      .reduce(
       (sum, i) => sum + Number(i.amount_paid || 0),
       0
-    );
+      );
   }, [invoices]);
 
   const overdueAmount = useMemo(() => {

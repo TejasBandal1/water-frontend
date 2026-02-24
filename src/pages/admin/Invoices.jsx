@@ -19,10 +19,14 @@ const ITEMS_PER_PAGE = 8;
 const STATUS_STYLES = {
   draft: "bg-amber-100 text-amber-700 ring-1 ring-amber-200",
   pending: "bg-blue-100 text-blue-700 ring-1 ring-blue-200",
+  partial: "bg-indigo-100 text-indigo-700 ring-1 ring-indigo-200",
   paid: "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200",
   overdue: "bg-red-100 text-red-700 ring-1 ring-red-200",
   cancelled: "bg-slate-200 text-slate-700 ring-1 ring-slate-300"
 };
+
+const BILLABLE_STATUSES = ["pending", "partial", "overdue", "paid"];
+const OUTSTANDING_STATUSES = ["pending", "partial", "overdue"];
 
 const Invoices = () => {
   const [invoices, setInvoices] = useState([]);
@@ -160,17 +164,20 @@ const Invoices = () => {
     currentPage * ITEMS_PER_PAGE
   );
 
-  const totalBilled = invoices.reduce(
-    (sum, inv) => sum + Number(inv.total_amount || 0),
-    0
-  );
+  const totalBilled = invoices
+    .filter((inv) => BILLABLE_STATUSES.includes((inv.status || "").toLowerCase()))
+    .reduce((sum, inv) => sum + Number(inv.total_amount || 0), 0);
 
-  const totalCollected = invoices.reduce(
-    (sum, inv) => sum + Number(inv.amount_paid || 0),
-    0
-  );
+  const totalCollected = invoices
+    .filter((inv) => BILLABLE_STATUSES.includes((inv.status || "").toLowerCase()))
+    .reduce((sum, inv) => sum + Number(inv.amount_paid || 0), 0);
 
-  const totalOutstanding = totalBilled - totalCollected;
+  const totalOutstanding = invoices
+    .filter((inv) => OUTSTANDING_STATUSES.includes((inv.status || "").toLowerCase()))
+    .reduce(
+      (sum, inv) => sum + Math.max(Number(inv.total_amount || 0) - Number(inv.amount_paid || 0), 0),
+      0
+    );
   const overdueCount = invoices.filter((inv) => inv.status === "overdue").length;
 
   const resetFilters = () => {
