@@ -193,6 +193,18 @@ export const getContainerLoss = async (fromDate, toDate, clientId) => {
   return res.data;
 };
 
+export const getPaymentBreakdown = async (fromDate, toDate, clientId) => {
+  const res = await API.get("/analytics/payment-breakdown", {
+    params: {
+      from_date: fromDate || undefined,
+      to_date: toDate || undefined,
+      client_id: clientId || undefined
+    }
+  });
+
+  return res.data;
+};
+
 /* ==========================================
    USERS
 ========================================== */

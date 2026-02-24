@@ -18,10 +18,12 @@ import {
   getClients,
   getContainerLoss,
   getMonthlyRevenue,
-  getOutstanding
+  getOutstanding,
+  getPaymentBreakdown
 } from "../../api/admin";
 
 const PIE_COLORS = ["#16a34a", "#f59e0b", "#dc2626"];
+const PAYMENT_CHANNEL_COLORS = ["#0f766e", "#2563eb"];
 
 const Analytics = () => {
   const [period, setPeriod] = useState("monthly");
@@ -35,6 +37,11 @@ const Analytics = () => {
   const [summary, setSummary] = useState({});
   const [revenueData, setRevenueData] = useState([]);
   const [containerData, setContainerData] = useState([]);
+  const [paymentData, setPaymentData] = useState({
+    summary: {},
+    by_method: [],
+    by_client: []
+  });
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -56,15 +63,23 @@ const Analytics = () => {
     try {
       const clientId = selectedClientId ? Number(selectedClientId) : undefined;
 
-      const [outstandingRes, revenueRes, containerRes] = await Promise.all([
+      const [outstandingRes, revenueRes, containerRes, paymentRes] = await Promise.all([
         getOutstanding(clientId),
         getMonthlyRevenue(period, fromDate, toDate, clientId),
-        getContainerLoss(fromDate, toDate, clientId)
+        getContainerLoss(fromDate, toDate, clientId),
+        getPaymentBreakdown(fromDate, toDate, clientId)
       ]);
 
       setSummary(outstandingRes || {});
       setRevenueData(revenueRes || []);
       setContainerData(containerRes || []);
+      setPaymentData(
+        paymentRes || {
+          summary: {},
+          by_method: [],
+          by_client: []
+        }
+      );
     } catch (err) {
       console.error("Analytics error:", err);
     } finally {
@@ -134,6 +149,34 @@ const Analytics = () => {
         0
       ),
     [containerData]
+  );
+  const paymentSummary = paymentData.summary || {};
+  const paymentByMethod = paymentData.by_method || [];
+  const paymentByClient = paymentData.by_client || [];
+
+  const totalCashCollected = Number(paymentSummary.total_cash_amount || 0);
+  const totalUpiCollected = Number(paymentSummary.total_upi_amount || 0);
+  const totalMixedTransactions = Number(paymentSummary.cash_upi_count || 0);
+  const totalPaymentsCount = Number(paymentSummary.payment_count || 0);
+
+  const paymentChannelPieData = useMemo(() => {
+    const data = [
+      { name: "Cash Collected", value: totalCashCollected },
+      { name: "UPI Collected", value: totalUpiCollected }
+    ];
+
+    return data.filter((row) => row.value > 0);
+  }, [totalCashCollected, totalUpiCollected]);
+
+  const paymentByClientChartData = useMemo(
+    () =>
+      paymentByClient.slice(0, 8).map((row) => ({
+        name: truncateName(row.client_name || `Client ${row.client_id}`),
+        cash: Number(row.cash_amount || 0),
+        upi: Number(row.upi_amount || 0),
+        total: Number(row.total_amount || 0)
+      })),
+    [paymentByClient]
   );
 
   const returnEfficiency =
@@ -318,6 +361,13 @@ const Analytics = () => {
         <KpiCard title="Containers Outside" value={totalContainersOutside} trend="neutral" subtitle={`Return efficiency ${returnEfficiency}%`} />
       </section>
 
+      <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <KpiCard title="Cash Collected" value={formatCurrency(totalCashCollected)} trend="up" subtitle="Payments received in cash" />
+        <KpiCard title="UPI Collected" value={formatCurrency(totalUpiCollected)} trend="up" subtitle="Payments received via UPI" />
+        <KpiCard title="Mixed Payments" value={totalMixedTransactions} trend="neutral" subtitle="Cash + UPI transactions" />
+        <KpiCard title="Payment Entries" value={totalPaymentsCount} trend="neutral" subtitle={`Recorded payments | ${clientLabel}`} />
+      </section>
+
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <ChartCard
           title="Revenue Trend"
@@ -435,6 +485,60 @@ const Analytics = () => {
             </ResponsiveContainer>
           )}
         </ChartCard>
+
+        <ChartCard
+          title="Payment Channel Mix"
+          subtitle="Cash vs UPI collected amount"
+        >
+          {paymentChannelPieData.length === 0 ? (
+            <EmptyState message="No payment channel data for selected range" />
+          ) : (
+            <ResponsiveContainer width="100%" height={310}>
+              <PieChart>
+                <Pie
+                  data={paymentChannelPieData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={72}
+                  outerRadius={108}
+                  paddingAngle={4}
+                >
+                  {paymentChannelPieData.map((entry, index) => (
+                    <Cell key={entry.name} fill={PAYMENT_CHANNEL_COLORS[index % PAYMENT_CHANNEL_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Legend verticalAlign="bottom" height={36} />
+                <Tooltip formatter={(val) => formatCurrency(val)} />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </ChartCard>
+
+        <ChartCard
+          title="Client Payment Mix"
+          subtitle="Top clients by payment amount (cash + UPI)"
+        >
+          {paymentByClientChartData.length === 0 ? (
+            <EmptyState message="No client payment data for selected filters" />
+          ) : (
+            <ResponsiveContainer width="100%" height={320}>
+              <BarChart
+                data={paymentByClientChartData}
+                margin={{ top: 8, right: 16, left: 8, bottom: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="name" tick={{ fill: "#64748b", fontSize: 12 }} />
+                <YAxis tick={{ fill: "#64748b", fontSize: 12 }} />
+                <Tooltip formatter={(val) => formatCurrency(val)} />
+                <Legend />
+                <Bar dataKey="cash" stackId="payment" fill="#0f766e" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="upi" stackId="payment" fill="#2563eb" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </ChartCard>
       </section>
 
       <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -447,6 +551,49 @@ const Analytics = () => {
           <Snapshot label="Total Paid" value={formatCurrency(totalPaid)} />
           <Snapshot label="Returned Units" value={totalReturned} />
         </div>
+      </section>
+
+      <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-base font-semibold text-slate-900">Client-wise Payment Register</h2>
+          <p className="text-xs text-slate-500">Track cash, UPI, and mixed transactions by client</p>
+        </div>
+
+        {paymentByClient.length === 0 ? (
+          <div className="empty-state">No client payment entries for selected filters.</div>
+        ) : (
+          <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200">
+            <table className="table-main min-w-[980px]">
+              <thead>
+                <tr>
+                  <th>Client</th>
+                  <th>Total Paid</th>
+                  <th>Cash</th>
+                  <th>UPI</th>
+                  <th>Cash Txns</th>
+                  <th>UPI Txns</th>
+                  <th>Cash+UPI Txns</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paymentByClient.map((row) => (
+                  <tr key={row.client_id}>
+                    <td>
+                      <p className="font-semibold text-slate-900">{row.client_name}</p>
+                      <p className="text-xs text-slate-500">Client ID: {row.client_id}</p>
+                    </td>
+                    <td className="font-semibold text-slate-900">{formatCurrency(row.total_amount)}</td>
+                    <td>{formatCurrency(row.cash_amount)}</td>
+                    <td>{formatCurrency(row.upi_amount)}</td>
+                    <td>{row.cash_only_count}</td>
+                    <td>{row.upi_only_count}</td>
+                    <td>{row.cash_upi_count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
     </div>
   );
@@ -530,5 +677,10 @@ const EmptyState = ({ message }) => (
     {message}
   </div>
 );
+
+const truncateName = (name) => {
+  if (!name) return "-";
+  return name.length > 16 ? `${name.slice(0, 16)}...` : name;
+};
 
 export default Analytics;
