@@ -93,17 +93,9 @@ const InvoiceDetail = () => {
     setTimeout(() => setToast(""), 3200);
   };
 
-  if (loading) {
-    return (
-      <div className="flex min-h-[70vh] items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-black border-t-transparent"></div>
-      </div>
-    );
-  }
-
-  if (!data) return null;
-
-  const { invoice, items, payments } = data;
+  const invoice = data?.invoice || {};
+  const items = data?.items || [];
+  const payments = data?.payments || [];
   const balance = Number(invoice.total_amount || 0) - Number(invoice.amount_paid || 0);
 
   const progress =
@@ -111,7 +103,7 @@ const InvoiceDetail = () => {
       ? (Number(invoice.amount_paid || 0) / Number(invoice.total_amount || 0)) * 100
       : 0;
 
-  const isPaymentAllowed = invoice.status !== "paid" && user.role === "admin";
+  const isPaymentAllowed = invoice.status !== "paid" && user?.role === "admin";
   const clientName = invoice.client?.name || "Client";
   const clientInitial = clientName.charAt(0).toUpperCase();
   const paymentsWithState = useMemo(() => {
@@ -264,6 +256,16 @@ const InvoiceDetail = () => {
 
     await submitPayment(pendingPaymentPayload);
   };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[70vh] items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-black border-t-transparent"></div>
+      </div>
+    );
+  }
+
+  if (!data) return null;
 
   return (
     <div className="page-shell mx-auto w-full max-w-[1480px]">
