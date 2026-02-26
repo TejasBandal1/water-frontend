@@ -22,7 +22,7 @@ const PAYMENT_METHOD_OPTIONS = [
 
 const UPI_ACCOUNT_OPTIONS = [
   { value: "DKUPI", label: "DKUPI" },
-  { value: "OTHER", label: "Other UPI Account" }
+  { value: "UPI", label: "UPI" }
 ];
 
 const InvoiceDetail = () => {
@@ -36,7 +36,6 @@ const InvoiceDetail = () => {
   const [cashSplitAmount, setCashSplitAmount] = useState("");
   const [upiSplitAmount, setUpiSplitAmount] = useState("");
   const [upiAccount, setUpiAccount] = useState("DKUPI");
-  const [customUpiAccount, setCustomUpiAccount] = useState("");
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [toast, setToast] = useState("");
@@ -120,9 +119,6 @@ const InvoiceDetail = () => {
     return amount;
   };
 
-  const getResolvedUpiAccount = () =>
-    upiAccount === "OTHER" ? customUpiAccount.trim() : upiAccount;
-
   const buildPaymentPayload = () => {
     const amount = validatePaymentAmount();
     if (!amount) return null;
@@ -133,7 +129,7 @@ const InvoiceDetail = () => {
     };
 
     if (paymentMethod === "UPI") {
-      const account = getResolvedUpiAccount();
+      const account = upiAccount;
       if (!account) {
         showToast("Select UPI account");
         return null;
@@ -156,7 +152,7 @@ const InvoiceDetail = () => {
         return null;
       }
 
-      const account = getResolvedUpiAccount();
+      const account = upiAccount;
       if (!account) {
         showToast("Select UPI account");
         return null;
@@ -193,7 +189,6 @@ const InvoiceDetail = () => {
       setCashSplitAmount("");
       setUpiSplitAmount("");
       setUpiAccount("DKUPI");
-      setCustomUpiAccount("");
       setShowPaymentChecklist(false);
       setPendingPaymentPayload(null);
       fetchData();
@@ -375,7 +370,6 @@ const InvoiceDetail = () => {
 
                   if (nextMethod === "CASH") {
                     setUpiAccount("DKUPI");
-                    setCustomUpiAccount("");
                   }
                 }}
                 className="form-select mt-3"
@@ -419,16 +413,6 @@ const InvoiceDetail = () => {
                       </option>
                     ))}
                   </select>
-
-                  {upiAccount === "OTHER" && (
-                    <input
-                      type="text"
-                      placeholder="Enter UPI account"
-                      value={customUpiAccount}
-                      onChange={(e) => setCustomUpiAccount(e.target.value)}
-                      className="form-input"
-                    />
-                  )}
                 </div>
               )}
 
