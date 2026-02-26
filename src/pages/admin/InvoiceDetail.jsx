@@ -226,11 +226,13 @@ const InvoiceDetail = () => {
             </p>
           </div>
 
-          <div className="space-y-2 text-right">
+          <div className="space-y-2 rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-left sm:text-right">
             <span className={`inline-block rounded-full px-4 py-1.5 text-xs font-semibold ${STATUS_STYLES[invoice.status] || "bg-slate-200 text-slate-700"}`}>
               {invoice.status.toUpperCase()}
             </span>
-            <p className="text-sm text-slate-200">Due: {invoice.due_date ? formatLocalDate(invoice.due_date) : "Not set"}</p>
+            <p className="text-sm text-slate-200">
+              Due: {invoice.due_date ? formatLocalDate(invoice.due_date) : "Not set"}
+            </p>
           </div>
         </div>
       </section>
@@ -255,7 +257,32 @@ const InvoiceDetail = () => {
           <section className="panel p-6">
             <h2 className="section-title">Container Breakdown</h2>
 
-            <div className="table-shell mt-4">
+            <div className="mt-4 space-y-3 md:hidden">
+              {items.map((item) => (
+                <div
+                  key={`mobile_item_${item.id}`}
+                  className="rounded-xl border border-slate-200 bg-slate-50 p-3"
+                >
+                  <p className="text-sm font-semibold text-slate-900">{item.container?.name}</p>
+                  <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
+                    <div>
+                      <p className="text-slate-500">Qty</p>
+                      <p className="font-semibold text-slate-800">{item.quantity}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500">Price</p>
+                      <p className="font-semibold text-slate-800">{formatCurrency(item.price_snapshot)}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500">Total</p>
+                      <p className="font-semibold text-slate-900">{formatCurrency(item.total)}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="table-shell mt-4 hidden md:block">
               <table className="table-main">
                 <thead>
                   <tr>
@@ -290,10 +317,10 @@ const InvoiceDetail = () => {
                 {payments.map((payment) => (
                   <div
                     key={payment.id}
-                    className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
+                    className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <p className="text-sm font-medium text-slate-900">Payment #{payment.id}</p>
                         <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-700">
                           {(payment.method || "CASH").replace("_", " + ")}
@@ -311,7 +338,9 @@ const InvoiceDetail = () => {
                         </p>
                       )}
                     </div>
-                    <p className="text-sm font-semibold text-emerald-700">{formatCurrency(payment.amount)}</p>
+                    <p className="text-sm font-semibold text-emerald-700 sm:text-right">
+                      {formatCurrency(payment.amount)}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -436,7 +465,7 @@ const InvoiceDetail = () => {
 
       {showPaymentChecklist && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+          <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl sm:p-6">
             <h3 className="text-lg font-semibold text-slate-900">Confirm Payment Checklist</h3>
             <p className="mt-2 text-sm text-slate-600">Invoice #{invoice.id} | Client: {invoice.client?.name}</p>
             <p className="mt-1 text-sm font-semibold text-slate-900">
@@ -480,21 +509,21 @@ const InvoiceDetail = () => {
               />
             </div>
 
-            <div className="mt-6 flex justify-end gap-3">
+            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
               <button
                 onClick={() => {
                   setShowPaymentChecklist(false);
                   setPendingPaymentPayload(null);
                 }}
                 disabled={processing}
-                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed"
+                className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed sm:w-auto"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmPayment}
                 disabled={processing || !pendingPaymentPayload || !Object.values(paymentChecklist).every(Boolean)}
-                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+                className="w-full rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400 sm:w-auto"
               >
                 {processing ? "Processing..." : "Confirm Payment"}
               </button>
