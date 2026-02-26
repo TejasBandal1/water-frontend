@@ -25,6 +25,9 @@ const UPI_ACCOUNT_OPTIONS = [
   { value: "RIVA_RICH", label: "Riva Rich" }
 ];
 
+const formatMethodLabel = (method) =>
+  String(method || "CASH").replace("_", " + ");
+
 const InvoiceDetail = () => {
   const { invoiceId } = useParams();
   const navigate = useNavigate();
@@ -102,6 +105,8 @@ const InvoiceDetail = () => {
       : 0;
 
   const isPaymentAllowed = invoice.status !== "paid" && user.role === "admin";
+  const clientName = invoice.client?.name || "Client";
+  const clientInitial = clientName.charAt(0).toUpperCase();
 
   const validatePaymentAmount = () => {
     const amount = Number(paymentAmount);
@@ -224,9 +229,12 @@ const InvoiceDetail = () => {
             <p className="page-subtitle">
               Created on {formatLocalDate(invoice.created_at)}
             </p>
+            <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-300">
+              Client: {clientName}
+            </p>
           </div>
 
-          <div className="space-y-2 rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-left sm:text-right">
+          <div className="space-y-2 rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-left shadow-[0_8px_22px_rgba(2,6,23,0.28)] sm:text-right">
             <span className={`inline-block rounded-full px-4 py-1.5 text-xs font-semibold ${STATUS_STYLES[invoice.status] || "bg-slate-200 text-slate-700"}`}>
               {invoice.status.toUpperCase()}
             </span>
@@ -243,14 +251,49 @@ const InvoiceDetail = () => {
         </div>
       )}
 
+      <section className="mb-6 grid grid-cols-2 gap-3 md:hidden">
+        <CompactStat
+          label="Total Bill"
+          value={formatCurrency(invoice.total_amount)}
+          tone="text-slate-900"
+        />
+        <CompactStat
+          label="Paid"
+          value={formatCurrency(invoice.amount_paid)}
+          tone="text-emerald-700"
+        />
+        <CompactStat
+          label="Balance"
+          value={formatCurrency(balance)}
+          tone={balance > 0 ? "text-amber-700" : "text-emerald-700"}
+        />
+        <CompactStat
+          label="Progress"
+          value={`${progress.toFixed(0)}%`}
+          tone="text-blue-700"
+        />
+      </section>
+
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-        <div className="space-y-6 xl:col-span-2">
+        <div className="order-2 space-y-6 xl:order-1 xl:col-span-2">
           <section className="panel p-6">
             <h2 className="section-title">Bill To</h2>
-            <div className="mt-3 space-y-1 text-sm text-slate-700">
-              <p className="font-semibold text-slate-900">{invoice.client?.name}</p>
-              <p>{invoice.client?.email || "-"}</p>
-              <p>{invoice.client?.phone || "-"}</p>
+            <div className="mt-4 flex items-start gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-bold text-white">
+                {clientInitial}
+              </div>
+              <div className="min-w-0">
+                <p className="text-base font-semibold text-slate-900">{clientName}</p>
+                <p className="mt-1 text-xs text-slate-500">Client Account</p>
+              </div>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2 text-xs">
+              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-slate-700">
+                Email: {invoice.client?.email || "-"}
+              </span>
+              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-slate-700">
+                Phone: {invoice.client?.phone || "-"}
+              </span>
             </div>
           </section>
 
@@ -261,16 +304,17 @@ const InvoiceDetail = () => {
               {items.map((item) => (
                 <div
                   key={`mobile_item_${item.id}`}
-                  className="rounded-xl border border-slate-200 bg-slate-50 p-3"
+                  className="rounded-xl border border-slate-200 bg-slate-50 p-3 shadow-[0_5px_16px_rgba(15,23,42,0.05)]"
                 >
-                  <p className="text-sm font-semibold text-slate-900">{item.container?.name}</p>
-                  <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-semibold text-slate-900">{item.container?.name}</p>
+                    <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
+                      Qty {item.quantity}
+                    </span>
+                  </div>
+                  <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
                     <div>
-                      <p className="text-slate-500">Qty</p>
-                      <p className="font-semibold text-slate-800">{item.quantity}</p>
-                    </div>
-                    <div>
-                      <p className="text-slate-500">Price</p>
+                      <p className="text-slate-500">Unit Price</p>
                       <p className="font-semibold text-slate-800">{formatCurrency(item.price_snapshot)}</p>
                     </div>
                     <div>
@@ -317,13 +361,13 @@ const InvoiceDetail = () => {
                 {payments.map((payment) => (
                   <div
                     key={payment.id}
-                    className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                    className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 shadow-[0_5px_16px_rgba(15,23,42,0.04)] sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="text-sm font-medium text-slate-900">Payment #{payment.id}</p>
                         <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-700">
-                          {(payment.method || "CASH").replace("_", " + ")}
+                          {formatMethodLabel(payment.method)}
                         </span>
                       </div>
                       <p className="text-xs text-slate-500">{formatLocalDateTime(payment.created_at)}</p>
@@ -348,28 +392,33 @@ const InvoiceDetail = () => {
           </section>
         </div>
 
-        <div className="space-y-6">
-          <section className="panel p-6 xl:sticky xl:top-6">
-            <h2 className="section-title">Payment Summary</h2>
-
-            <div className="mt-4 space-y-3 text-sm">
-              <Row label="Total" value={formatCurrency(invoice.total_amount)} />
-              <Row label="Paid" value={formatCurrency(invoice.amount_paid)} />
-              <Row
-                label="Balance"
-                value={formatCurrency(balance)}
-                valueClass={balance > 0 ? "text-red-600" : "text-emerald-600"}
-              />
+        <div className="order-1 space-y-6 xl:order-2">
+          <section className="panel overflow-hidden xl:sticky xl:top-6">
+            <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 px-5 py-4 text-white">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-200">Payment Summary</h2>
+              <p className="mt-1 text-xs text-slate-300">Invoice #{invoice.id}</p>
             </div>
 
-            <div className="mt-5">
-              <div className="h-2.5 w-full rounded-full bg-slate-200">
-                <div
-                  className={`h-2.5 rounded-full transition-all duration-500 ${progressTone}`}
-                  style={{ width: `${Math.min(progress, 100)}%` }}
+            <div className="p-5">
+              <div className="space-y-3 text-sm">
+                <Row label="Total" value={formatCurrency(invoice.total_amount)} />
+                <Row label="Paid" value={formatCurrency(invoice.amount_paid)} />
+                <Row
+                  label="Balance"
+                  value={formatCurrency(balance)}
+                  valueClass={balance > 0 ? "text-red-600" : "text-emerald-600"}
                 />
               </div>
-              <p className="mt-2 text-xs text-slate-500">{progress.toFixed(0)}% Paid</p>
+
+              <div className="mt-5">
+                <div className="h-2.5 w-full rounded-full bg-slate-200">
+                  <div
+                    className={`h-2.5 rounded-full transition-all duration-500 ${progressTone}`}
+                    style={{ width: `${Math.min(progress, 100)}%` }}
+                  />
+                </div>
+                <p className="mt-2 text-xs text-slate-500">{progress.toFixed(0)}% Paid</p>
+              </div>
             </div>
           </section>
 
@@ -378,14 +427,16 @@ const InvoiceDetail = () => {
               <h2 className="section-title">Record Payment</h2>
               <p className="mt-1 text-xs text-slate-500">Use checklist confirmation to avoid incorrect entries.</p>
 
+              <label className="form-label mt-4">Amount</label>
               <input
                 type="number"
                 placeholder="Enter amount"
                 value={paymentAmount}
                 onChange={(e) => setPaymentAmount(e.target.value)}
-                className="form-input mt-4"
+                className="form-input"
               />
 
+              <label className="form-label mt-3">Payment Method</label>
               <select
                 value={paymentMethod}
                 onChange={(e) => {
@@ -401,7 +452,7 @@ const InvoiceDetail = () => {
                     setUpiAccount("DKUPI");
                   }
                 }}
-                className="form-select mt-3"
+                className="form-select"
               >
                 {PAYMENT_METHOD_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -431,6 +482,7 @@ const InvoiceDetail = () => {
 
               {paymentMethod !== "CASH" && (
                 <div className="mt-3 space-y-3">
+                  <label className="form-label">UPI Account</label>
                   <select
                     value={upiAccount}
                     onChange={(e) => setUpiAccount(e.target.value)}
@@ -458,21 +510,21 @@ const InvoiceDetail = () => {
       </div>
 
       {toast && (
-        <div className="toast">
+        <div className="toast left-4 right-4 sm:left-auto sm:right-6">
           {toast}
         </div>
       )}
 
       {showPaymentChecklist && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl sm:p-6">
+          <div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl sm:p-6">
             <h3 className="text-lg font-semibold text-slate-900">Confirm Payment Checklist</h3>
             <p className="mt-2 text-sm text-slate-600">Invoice #{invoice.id} | Client: {invoice.client?.name}</p>
             <p className="mt-1 text-sm font-semibold text-slate-900">
               Payment Amount: {formatCurrency(pendingPaymentPayload?.amount || 0)}
             </p>
             <p className="mt-1 text-xs text-slate-500">
-              Method: {(pendingPaymentPayload?.method || "CASH").replace("_", " + ")}
+              Method: {formatMethodLabel(pendingPaymentPayload?.method)}
             </p>
             {pendingPaymentPayload?.method === "CASH_UPI" && (
               <p className="mt-1 text-xs text-slate-500">
@@ -539,6 +591,13 @@ const Row = ({ label, value, valueClass = "text-slate-900" }) => (
   <div className="flex items-center justify-between">
     <span className="text-slate-500">{label}</span>
     <span className={`font-semibold ${valueClass}`}>{value}</span>
+  </div>
+);
+
+const CompactStat = ({ label, value, tone = "text-slate-900" }) => (
+  <div className="rounded-xl border border-slate-200 bg-white px-3 py-3 shadow-[0_6px_16px_rgba(15,23,42,0.05)]">
+    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{label}</p>
+    <p className={`mt-1 text-base font-bold ${tone}`}>{value}</p>
   </div>
 );
 
