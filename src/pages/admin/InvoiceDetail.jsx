@@ -215,7 +215,7 @@ const InvoiceDetail = () => {
   };
 
   return (
-    <div className="page-shell">
+    <div className="page-shell mx-auto w-full max-w-[1480px]">
       <section className="page-hero">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
@@ -251,7 +251,7 @@ const InvoiceDetail = () => {
         </div>
       )}
 
-      <section className="mb-6 grid grid-cols-2 gap-3 md:hidden">
+      <section className="mb-6 grid grid-cols-2 gap-3 lg:hidden">
         <CompactStat
           label="Total Bill"
           value={formatCurrency(invoice.total_amount)}
@@ -274,9 +274,9 @@ const InvoiceDetail = () => {
         />
       </section>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-        <div className="order-2 space-y-6 xl:order-1 xl:col-span-2">
-          <section className="panel p-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <div className="order-2 space-y-6 lg:order-1 lg:col-span-8">
+          <section className="panel p-4 sm:p-6">
             <h2 className="section-title">Bill To</h2>
             <div className="mt-4 flex items-start gap-3">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-bold text-white">
@@ -297,7 +297,7 @@ const InvoiceDetail = () => {
             </div>
           </section>
 
-          <section className="panel p-6">
+          <section className="panel p-4 sm:p-6">
             <h2 className="section-title">Container Breakdown</h2>
 
             <div className="mt-4 space-y-3 md:hidden">
@@ -351,7 +351,7 @@ const InvoiceDetail = () => {
             </div>
           </section>
 
-          <section className="panel p-6">
+          <section className="panel p-4 sm:p-6">
             <h2 className="section-title">Payment History</h2>
 
             {payments.length === 0 ? (
@@ -392,8 +392,8 @@ const InvoiceDetail = () => {
           </section>
         </div>
 
-        <div className="order-1 space-y-6 xl:order-2">
-          <section className="panel overflow-hidden xl:sticky xl:top-6">
+        <div className="order-1 space-y-6 lg:order-2 lg:col-span-4">
+          <section className="panel overflow-hidden lg:sticky lg:top-6">
             <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 px-5 py-4 text-white">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-200">Payment Summary</h2>
               <p className="mt-1 text-xs text-slate-300">Invoice #{invoice.id}</p>
@@ -423,7 +423,7 @@ const InvoiceDetail = () => {
           </section>
 
           {isPaymentAllowed && (
-            <section className="panel p-6">
+            <section className="panel p-4 sm:p-6">
               <h2 className="section-title">Record Payment</h2>
               <p className="mt-1 text-xs text-slate-500">Use checklist confirmation to avoid incorrect entries.</p>
 
