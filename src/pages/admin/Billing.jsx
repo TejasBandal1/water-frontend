@@ -17,6 +17,12 @@ const UPI_ACCOUNT_OPTIONS = [
   { value: "UPI", label: "UPI" }
 ];
 
+const BILL_STATUS_OPTIONS = [
+  { value: "all", label: "All Bills" },
+  { value: "pending", label: "Pending" },
+  { value: "completed", label: "Completed" }
+];
+
 const getCurrentMonthValue = () => {
   const now = new Date();
   const month = String(now.getMonth() + 1).padStart(2, "0");
@@ -92,6 +98,7 @@ const Billing = () => {
   const [activePeriod, setActivePeriod] = useState(toMonthParts(initialMonthFilter));
   const [searchInput, setSearchInput] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
+  const [billStatusFilter, setBillStatusFilter] = useState("all");
   const [showClientDropdown, setShowClientDropdown] = useState(false);
   const [highlightedClientIndex, setHighlightedClientIndex] = useState(-1);
   const [clientDirectory, setClientDirectory] = useState([]);
@@ -154,6 +161,53 @@ const Billing = () => {
 
     return filtered.slice(0, 8);
   }, [allRows, clientDirectory, searchInput]);
+
+  const filteredRows = useMemo(() => {
+    if (billStatusFilter === "all") return rows;
+
+    return rows.filter((row) => {
+      const outstanding = Number(row.total_outstanding || 0);
+      if (billStatusFilter === "pending") return outstanding > 0;
+      if (billStatusFilter === "completed") return outstanding <= 0;
+      return true;
+    });
+  }, [rows, billStatusFilter]);
+
+  const filteredSummary = useMemo(
+    () =>
+      filteredRows.reduce(
+        (acc, row) => ({
+          clients_count: acc.clients_count + 1,
+          pending_invoices_count:
+            acc.pending_invoices_count + Number(row.pending_invoice_count || 0),
+          total_monthly_bill:
+            acc.total_monthly_bill + Number(row.total_monthly_bill || 0),
+          total_paid: acc.total_paid + Number(row.total_paid || 0),
+          total_outstanding:
+            acc.total_outstanding + Number(row.total_outstanding || 0)
+        }),
+        {
+          clients_count: 0,
+          pending_invoices_count: 0,
+          total_monthly_bill: 0,
+          total_paid: 0,
+          total_outstanding: 0
+        }
+      ),
+    [filteredRows]
+  );
+
+  const summaryToShow =
+    billStatusFilter === "all" ? summary : filteredSummary;
+
+  const statusCounts = useMemo(
+    () => ({
+      all: rows.length,
+      pending: rows.filter((row) => Number(row.total_outstanding || 0) > 0).length,
+      completed: rows.filter((row) => Number(row.total_outstanding || 0) <= 0).length
+    }),
+    [rows]
+  );
 
   const loadData = async (override = {}) => {
     const activeMonthFilter = override.monthFilter ?? monthFilter;
@@ -250,6 +304,7 @@ const Billing = () => {
     setMonthFilter(defaultMonth);
     setSearchInput("");
     setAppliedSearch("");
+    setBillStatusFilter("all");
     setShowClientDropdown(false);
     setHighlightedClientIndex(-1);
     loadData({ monthFilter: defaultMonth, search: "" });
@@ -412,7 +467,7 @@ const Billing = () => {
       </section>
 
       <section className="panel mb-6 p-5">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-7">
           <div>
             <label className="form-label">Billing Month</label>
             <input
@@ -532,6 +587,44 @@ const Billing = () => {
             </div>
           </div>
 
+          <div className="md:col-span-2">
+            <label className="form-label">Bill Status</label>
+            <div className="md:hidden">
+              <select
+                value={billStatusFilter}
+                onChange={(e) => setBillStatusFilter(e.target.value)}
+                className="form-select"
+              >
+                {BILL_STATUS_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="hidden flex-wrap gap-2 md:flex">
+              {BILL_STATUS_OPTIONS.map((option) => {
+                const isActive = billStatusFilter === option.value;
+                const count = statusCounts[option.value] ?? 0;
+
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setBillStatusFilter(option.value)}
+                    className={`rounded-full border px-3 py-2 text-xs font-semibold transition ${
+                      isActive
+                        ? "border-slate-900 bg-slate-900 text-white"
+                        : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                    }`}
+                  >
+                    {option.label} ({count})
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <div>
             <label className="form-label">Actions</label>
             <div className="flex gap-3">
@@ -547,15 +640,15 @@ const Billing = () => {
       </section>
 
       <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <SummaryCard title="Clients" value={summary.clients_count} />
-        <SummaryCard title="Pending Invoices" value={summary.pending_invoices_count} />
+        <SummaryCard title="Clients" value={summaryToShow.clients_count} />
+        <SummaryCard title="Pending Invoices" value={summaryToShow.pending_invoices_count} />
         <SummaryCard
           title="Monthly Bill"
-          value={formatCurrency(summary.total_monthly_bill)}
+          value={formatCurrency(summaryToShow.total_monthly_bill)}
         />
         <SummaryCard
           title="Outstanding"
-          value={formatCurrency(summary.total_outstanding)}
+          value={formatCurrency(summaryToShow.total_outstanding)}
           tone="text-amber-700"
         />
       </section>
@@ -565,8 +658,10 @@ const Billing = () => {
           <div className="flex justify-center py-20">
             <div className="h-10 w-10 animate-spin rounded-full border-4 border-black border-t-transparent" />
           </div>
-        ) : rows.length === 0 ? (
-          <div className="empty-state">No monthly billing records found for selected filters.</div>
+        ) : filteredRows.length === 0 ? (
+          <div className="empty-state">
+            No {billStatusFilter === "all" ? "" : `${billStatusFilter} `}billing records found for selected filters.
+          </div>
         ) : (
           <table className="table-main">
             <thead>
@@ -579,7 +674,7 @@ const Billing = () => {
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => {
+              {filteredRows.map((row) => {
                 const expanded = Boolean(expandedClients[row.client_id]);
                 const monthlyBill = Number(row.total_monthly_bill || 0);
                 const totalPaid = Number(row.total_paid || 0);
