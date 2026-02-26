@@ -10,6 +10,7 @@ const routeMeta = [
   { pattern: /^\/admin\/pricing/, title: "Pricing", scope: "Administration" },
   { pattern: /^\/admin\/invoices\/\d+/, title: "Invoice Detail", scope: "Administration" },
   { pattern: /^\/admin\/invoices/, title: "Invoices", scope: "Administration" },
+  { pattern: /^\/admin\/billing/, title: "Billing", scope: "Administration" },
   { pattern: /^\/admin\/analytics/, title: "Analytics", scope: "Administration" },
   { pattern: /^\/admin\/pending-returns/, title: "Pending Returns", scope: "Administration" },
   { pattern: /^\/admin\/delivery-matrix/, title: "Delivery Matrix", scope: "Administration" },

@@ -12,6 +12,7 @@ import Clients from "./pages/admin/Clients";
 import Containers from "./pages/admin/Containers";
 import Pricing from "./pages/admin/Pricing";
 import Invoices from "./pages/admin/Invoices";
+import Billing from "./pages/admin/Billing";
 import Users from "./pages/admin/Users";
 import AuditLogs from "./pages/admin/AuditLogs";
 import InvoiceDetail from "./pages/admin/InvoiceDetail";
@@ -109,6 +110,7 @@ function App() {
         <Route path="containers" element={<Containers />} />
         <Route path="pricing" element={<Pricing />} />
         <Route path="invoices" element={<Invoices />} />
+        <Route path="billing" element={<Billing />} />
         <Route path="invoices/:invoiceId" element={<InvoiceDetail />} />
         <Route path="analytics" element={<Analytics />} />
         <Route path="users" element={<Users />} />

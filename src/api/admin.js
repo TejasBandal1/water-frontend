@@ -144,6 +144,22 @@ export const voidReissueInvoice = async (invoiceId, reason) => {
   return res.data;
 };
 
+export const getMonthlyBillingSummary = async (year, month, search) => {
+  const res = await API.get("/admin/billing/monthly", {
+    params: {
+      year: year || undefined,
+      month: month || undefined,
+      search: search?.trim() || undefined
+    }
+  });
+  return res.data;
+};
+
+export const recordMonthlyPayment = async (payload) => {
+  const res = await API.post("/admin/billing/monthly/pay", payload);
+  return res.data;
+};
+
 /* ==========================================
    ANALYTICS
 ========================================== */

@@ -22,7 +22,7 @@ const PAYMENT_METHOD_OPTIONS = [
 
 const UPI_ACCOUNT_OPTIONS = [
   { value: "DKUPI", label: "DKUPI" },
-  { value: "UPI", label: "UPI" }
+  { value: "RIVA_RICH", label: "Riva Rich" }
 ];
 
 const InvoiceDetail = () => {
