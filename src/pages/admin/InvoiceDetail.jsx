@@ -25,6 +25,12 @@ const UPI_ACCOUNT_OPTIONS = [
   { value: "RIVA_RICH", label: "Riva Rich" }
 ];
 
+const PAYMENT_FILTER_OPTIONS = [
+  { value: "all", label: "All" },
+  { value: "completed", label: "Completed" },
+  { value: "pending", label: "Pending" }
+];
+
 const formatMethodLabel = (method) =>
   String(method || "CASH").replace("_", " + ");
 
@@ -42,6 +48,7 @@ const InvoiceDetail = () => {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [toast, setToast] = useState("");
+  const [paymentFilter, setPaymentFilter] = useState("all");
 
   const [showPaymentChecklist, setShowPaymentChecklist] = useState(false);
   const [pendingPaymentPayload, setPendingPaymentPayload] = useState(null);
@@ -107,6 +114,50 @@ const InvoiceDetail = () => {
   const isPaymentAllowed = invoice.status !== "paid" && user.role === "admin";
   const clientName = invoice.client?.name || "Client";
   const clientInitial = clientName.charAt(0).toUpperCase();
+  const paymentsWithState = useMemo(() => {
+    const total = Number(invoice.total_amount || 0);
+    const ascending = [...payments].sort((a, b) => {
+      const aTime = new Date(a.created_at || 0).getTime();
+      const bTime = new Date(b.created_at || 0).getTime();
+      if (aTime !== bTime) return aTime - bTime;
+      return Number(a.id || 0) - Number(b.id || 0);
+    });
+
+    let runningPaid = 0;
+    const stateById = {};
+
+    ascending.forEach((payment) => {
+      runningPaid = Number((runningPaid + Number(payment.amount || 0)).toFixed(2));
+      const remaining = Number((total - runningPaid).toFixed(2));
+      stateById[payment.id] = remaining <= 0 ? "completed" : "pending";
+    });
+
+    return payments.map((payment) => ({
+      ...payment,
+      payment_state:
+        stateById[payment.id] || (invoice.status === "paid" ? "completed" : "pending")
+    }));
+  }, [payments, invoice.total_amount, invoice.status]);
+
+  const paymentCounts = useMemo(() => {
+    const completed = paymentsWithState.filter(
+      (payment) => payment.payment_state === "completed"
+    ).length;
+    const pending = paymentsWithState.filter(
+      (payment) => payment.payment_state === "pending"
+    ).length;
+
+    return {
+      all: paymentsWithState.length,
+      completed,
+      pending
+    };
+  }, [paymentsWithState]);
+
+  const filteredPayments = useMemo(() => {
+    if (paymentFilter === "all") return paymentsWithState;
+    return paymentsWithState.filter((payment) => payment.payment_state === paymentFilter);
+  }, [paymentsWithState, paymentFilter]);
 
   const validatePaymentAmount = () => {
     const amount = Number(paymentAmount);
@@ -352,13 +403,40 @@ const InvoiceDetail = () => {
           </section>
 
           <section className="panel p-4 sm:p-6">
-            <h2 className="section-title">Payment History</h2>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <h2 className="section-title">Payment History</h2>
+              <div className="flex flex-wrap gap-2">
+                {PAYMENT_FILTER_OPTIONS.map((option) => {
+                  const active = paymentFilter === option.value;
+                  const count = paymentCounts[option.value] ?? 0;
 
-            {payments.length === 0 ? (
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setPaymentFilter(option.value)}
+                      className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                        active
+                          ? "border-slate-900 bg-slate-900 text-white"
+                          : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
+                      }`}
+                    >
+                      {option.label} ({count})
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {paymentsWithState.length === 0 ? (
               <p className="mt-3 text-sm text-slate-500">No payments recorded yet.</p>
+            ) : filteredPayments.length === 0 ? (
+              <p className="mt-3 text-sm text-slate-500">
+                No {paymentFilter} payments for this invoice.
+              </p>
             ) : (
               <div className="mt-4 space-y-2">
-                {payments.map((payment) => (
+                {filteredPayments.map((payment) => (
                   <div
                     key={payment.id}
                     className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 shadow-[0_5px_16px_rgba(15,23,42,0.04)] sm:flex-row sm:items-center sm:justify-between"
@@ -368,6 +446,15 @@ const InvoiceDetail = () => {
                         <p className="text-sm font-medium text-slate-900">Payment #{payment.id}</p>
                         <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-700">
                           {formatMethodLabel(payment.method)}
+                        </span>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                            payment.payment_state === "completed"
+                              ? "bg-emerald-100 text-emerald-700"
+                              : "bg-amber-100 text-amber-700"
+                          }`}
+                        >
+                          {String(payment.payment_state).toUpperCase()}
                         </span>
                       </div>
                       <p className="text-xs text-slate-500">{formatLocalDateTime(payment.created_at)}</p>
