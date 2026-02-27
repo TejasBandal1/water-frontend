@@ -13,7 +13,7 @@ const PAYMENT_METHOD_OPTIONS = [
 ];
 
 const UPI_ACCOUNT_OPTIONS = [
-  { value: "DKUPI", label: "DKUPI" },
+  { value: "DKPUPI", label: "DKPUPI" },
   { value: "UPI", label: "UPI" }
 ];
 
@@ -123,7 +123,7 @@ const Billing = () => {
   const [paymentMethod, setPaymentMethod] = useState("CASH");
   const [cashSplitAmount, setCashSplitAmount] = useState("");
   const [upiSplitAmount, setUpiSplitAmount] = useState("");
-  const [upiAccount, setUpiAccount] = useState("DKUPI");
+  const [upiAccount, setUpiAccount] = useState("DKPUPI");
   const [processing, setProcessing] = useState(false);
 
   const [showChecklist, setShowChecklist] = useState(false);
@@ -325,7 +325,7 @@ const Billing = () => {
     setPaymentMethod("CASH");
     setCashSplitAmount("");
     setUpiSplitAmount("");
-    setUpiAccount("DKUPI");
+    setUpiAccount("DKPUPI");
     setShowChecklist(false);
     setPendingPayload(null);
     setChecklist({
@@ -341,7 +341,7 @@ const Billing = () => {
     setPaymentMethod("CASH");
     setCashSplitAmount("");
     setUpiSplitAmount("");
-    setUpiAccount("DKUPI");
+    setUpiAccount("DKPUPI");
     setShowChecklist(false);
     setPendingPayload(null);
     setChecklist({

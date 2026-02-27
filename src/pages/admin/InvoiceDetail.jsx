@@ -21,7 +21,7 @@ const PAYMENT_METHOD_OPTIONS = [
 ];
 
 const UPI_ACCOUNT_OPTIONS = [
-  { value: "DKUPI", label: "DKUPI" },
+  { value: "DKPUPI", label: "DKPUPI" },
   { value: "RIVA_RICH", label: "Riva Rich" }
 ];
 
@@ -44,7 +44,7 @@ const InvoiceDetail = () => {
   const [paymentMethod, setPaymentMethod] = useState("CASH");
   const [cashSplitAmount, setCashSplitAmount] = useState("");
   const [upiSplitAmount, setUpiSplitAmount] = useState("");
-  const [upiAccount, setUpiAccount] = useState("DKUPI");
+  const [upiAccount, setUpiAccount] = useState("DKPUPI");
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [toast, setToast] = useState("");
@@ -236,7 +236,7 @@ const InvoiceDetail = () => {
       setPaymentMethod("CASH");
       setCashSplitAmount("");
       setUpiSplitAmount("");
-      setUpiAccount("DKUPI");
+      setUpiAccount("DKPUPI");
       setShowPaymentChecklist(false);
       setPendingPaymentPayload(null);
       fetchData();
@@ -538,7 +538,7 @@ const InvoiceDetail = () => {
                   }
 
                   if (nextMethod === "CASH") {
-                    setUpiAccount("DKUPI");
+                    setUpiAccount("DKPUPI");
                   }
                 }}
                 className="form-select"
