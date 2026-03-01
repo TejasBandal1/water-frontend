@@ -36,6 +36,9 @@ const Users = () => {
 
   const [form, setForm] = useState(initialForm);
 
+  const getErrorMessage = (err, fallback) =>
+    err?.response?.data?.detail || fallback;
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -107,10 +110,11 @@ const Users = () => {
 
     try {
       await deleteUser(userId, user.token);
-      showToast("User deleted");
+      showToast("User archived");
       fetchData();
-    } catch {
-      showToast("Delete failed");
+    } catch (err) {
+      console.error(err);
+      showToast(getErrorMessage(err, "Delete failed"));
     }
   };
 

@@ -29,6 +29,9 @@ const Clients = () => {
 
   const [form, setForm] = useState(initialForm);
 
+  const getErrorMessage = (err, fallback) =>
+    err?.response?.data?.detail || fallback;
+
   useEffect(() => {
     fetchClients();
   }, []);
@@ -83,9 +86,14 @@ const Clients = () => {
 
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this client?")) return;
-    await deleteClient(id, user.token);
-    showToast("Client deleted");
-    fetchClients();
+    try {
+      await deleteClient(id, user.token);
+      showToast("Client deactivated");
+      fetchClients();
+    } catch (err) {
+      console.error("Delete client error:", err);
+      showToast(getErrorMessage(err, "Delete failed"));
+    }
   };
 
   const handleEdit = (client) => {
