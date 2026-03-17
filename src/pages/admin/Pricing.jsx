@@ -33,6 +33,8 @@ const Pricing = () => {
     price: ""
   });
 
+  const normalize = (value) => String(value || "").trim().toLowerCase();
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -70,11 +72,26 @@ const Pricing = () => {
 
   const formatDate = (date) => formatLocalDate(date);
 
-  const getClientName = (id) =>
-    clients.find((c) => c.id === id)?.name || "";
+  const clientNameMap = useMemo(() => {
+    const map = {};
+    clients.forEach((client) => {
+      map[client.id] = client.name || `Client #${client.id}`;
+    });
+    return map;
+  }, [clients]);
+
+  const containerNameMap = useMemo(() => {
+    const map = {};
+    containers.forEach((container) => {
+      map[container.id] = container.name || `Container #${container.id}`;
+    });
+    return map;
+  }, [containers]);
+
+  const getClientName = (id) => clientNameMap[id] || `Client #${id}`;
 
   const getContainerName = (id) =>
-    containers.find((c) => c.id === id)?.name || "";
+    containerNameMap[id] || `Container #${id}`;
 
   /* ================= SAVE PRICE ================= */
 
@@ -141,6 +158,8 @@ const Pricing = () => {
   /* ================= FILTER ================= */
 
   const filteredPrices = useMemo(() => {
+    const query = normalize(searchTerm);
+
     const filtered = prices
       .filter((p) =>
         selectedClientFilter
@@ -148,12 +167,16 @@ const Pricing = () => {
           : true
       )
       .filter((p) => {
-        const client = getClientName(p.client_id).toLowerCase();
-        const container = getContainerName(p.container_id).toLowerCase();
+        if (!query) return true;
+
+        const client = normalize(getClientName(p.client_id));
+        const container = normalize(getContainerName(p.container_id));
+        const price = normalize(p.price);
 
         return (
-          client.includes(searchTerm.toLowerCase()) ||
-          container.includes(searchTerm.toLowerCase())
+          client.includes(query) ||
+          container.includes(query) ||
+          price.includes(query)
         );
       });
 
@@ -169,7 +192,11 @@ const Pricing = () => {
         b.effective_from || b.created_at
       );
     });
-  }, [prices, selectedClientFilter, searchTerm, latestMap]);
+  }, [prices, selectedClientFilter, searchTerm, latestMap, clientNameMap, containerNameMap]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedClientFilter]);
 
   /* ================= PAGINATION ================= */
 
@@ -226,12 +253,27 @@ const Pricing = () => {
           ))}
         </select>
 
-        <input
-          placeholder="Search..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="form-input min-w-[200px] flex-1"
-        />
+        <div className="relative min-w-[240px] flex-1">
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+            <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden="true">
+              <path d="M10 4a6 6 0 104.472 10.002l4.763 4.763 1.414-1.414-4.763-4.763A6 6 0 0010 4zm0 2a4 4 0 110 8 4 4 0 010-8z" />
+            </svg>
+          </span>
+          <input
+            placeholder="Search client, container or price..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="form-input w-full pl-9 pr-10"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-xs font-semibold text-slate-500 hover:bg-slate-100"
+            >
+              Clear
+            </button>
+          )}
+        </div>
 
         <button
           onClick={resetFilters}
@@ -239,6 +281,10 @@ const Pricing = () => {
         >
           Reset
         </button>
+
+        <p className="ml-auto text-xs text-slate-500">
+          Showing {filteredPrices.length} of {prices.length} records
+        </p>
       </div>
 
       {/* CREATE PRICE */}
@@ -313,48 +359,56 @@ const Pricing = () => {
           </thead>
 
           <tbody>
-            {paginatedPrices.map((p) => (
-              <tr
-                key={p.id}
-                className={`${
-                  isLatest(p) ? "bg-green-50" : ""
-                }`}
-              >
-                <td>{getClientName(p.client_id)}</td>
-                <td>{getContainerName(p.container_id)}</td>
-                <td className="font-semibold text-slate-900">
-                  {formatCurrency(p.price)}
-                </td>
-                <td>
-                  {formatDate(p.effective_from)}
-                </td>
-                <td>
-                  {isLatest(p) ? (
-                    <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs text-emerald-700">
-                      Active
-                    </span>
-                  ) : (
-                    <span className="rounded-full bg-slate-200 px-3 py-1 text-xs text-slate-600">
-                      Archived
-                    </span>
-                  )}
-                </td>
-                <td>
-                  <button
-                    onClick={() =>
-                      setHistoryModal(
-                        latestMap[
-                          `${p.client_id}_${p.container_id}`
-                        ] || []
-                      )
-                    }
-                    className="text-sm font-semibold text-blue-700 hover:underline"
-                  >
-                    View
-                  </button>
+            {paginatedPrices.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="py-8 text-center text-sm text-slate-500">
+                  No pricing records match your current search/filter.
                 </td>
               </tr>
-            ))}
+            ) : (
+              paginatedPrices.map((p) => (
+                <tr
+                  key={p.id}
+                  className={`${
+                    isLatest(p) ? "bg-green-50" : ""
+                  }`}
+                >
+                  <td>{getClientName(p.client_id)}</td>
+                  <td>{getContainerName(p.container_id)}</td>
+                  <td className="font-semibold text-slate-900">
+                    {formatCurrency(p.price)}
+                  </td>
+                  <td>
+                    {formatDate(p.effective_from)}
+                  </td>
+                  <td>
+                    {isLatest(p) ? (
+                      <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs text-emerald-700">
+                        Active
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-slate-200 px-3 py-1 text-xs text-slate-600">
+                        Archived
+                      </span>
+                    )}
+                  </td>
+                  <td>
+                    <button
+                      onClick={() =>
+                        setHistoryModal(
+                          latestMap[
+                            `${p.client_id}_${p.container_id}`
+                          ] || []
+                        )
+                      }
+                      className="text-sm font-semibold text-blue-700 hover:underline"
+                    >
+                      View
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
