@@ -759,6 +759,9 @@ const Billing = () => {
                                 <span className="ml-2 font-semibold">
                                   {formatCurrency(inv.outstanding_amount)}
                                 </span>
+                                <span className="ml-2 rounded-full border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700">
+                                  {Number(inv.total_jars_delivered || 0)} jars
+                                </span>
                               </div>
                             ))}
                             {(row.pending_invoices || []).length > 3 && (
@@ -802,7 +805,7 @@ const Billing = () => {
                                 </span>
                               </div>
 
-                              <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                              <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
                                 <DetailMetric
                                   label="Invoices"
                                   value={row.invoice_count}
@@ -822,6 +825,11 @@ const Billing = () => {
                                   label="Outstanding"
                                   value={formatCurrency(row.total_outstanding)}
                                   tone="text-amber-700"
+                                />
+                                <DetailMetric
+                                  label="Jars Delivered"
+                                  value={Number(row.total_jars_delivered || 0)}
+                                  tone="text-blue-700"
                                 />
                               </div>
 
@@ -848,6 +856,14 @@ const Billing = () => {
                                           {formatCurrency(inv.outstanding_amount)}
                                         </p>
                                       </div>
+                                      <div className="mt-1 flex items-center justify-between text-[11px]">
+                                        <p className="text-slate-500">
+                                          {inv.invoice_date ? formatLocalDate(inv.invoice_date) : "-"}
+                                        </p>
+                                        <p className="font-semibold text-blue-700">
+                                          {Number(inv.total_jars_delivered || 0)} jars
+                                        </p>
+                                      </div>
                                     </div>
                                   ))
                                 )}
@@ -866,17 +882,18 @@ const Billing = () => {
                                 <p className="mt-3 text-sm text-slate-500">No daily details available.</p>
                               ) : (
                                 <div className="mt-3 overflow-hidden rounded-lg border border-slate-200">
-                                  <div className="grid grid-cols-4 gap-2 border-b border-slate-200 bg-slate-100 px-2 py-2 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
+                                  <div className="grid grid-cols-5 gap-2 border-b border-slate-200 bg-slate-100 px-2 py-2 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
                                     <span>Date</span>
                                     <span className="text-right">Billed</span>
                                     <span className="text-right">Paid</span>
                                     <span className="text-right">Balance</span>
+                                    <span className="text-right">Jars</span>
                                   </div>
                                   <div className="max-h-72 divide-y divide-slate-100 overflow-y-auto bg-white">
                                     {row.daily_details.map((day) => (
                                       <div
                                         key={`${row.client_id}_${day.date}`}
-                                        className="grid grid-cols-4 gap-2 px-2 py-2 text-[11px]"
+                                        className="grid grid-cols-5 gap-2 px-2 py-2 text-[11px]"
                                       >
                                         <div>
                                           <p className="font-semibold text-slate-800">{formatLocalDate(day.date)}</p>
@@ -890,6 +907,9 @@ const Billing = () => {
                                         </p>
                                         <p className="text-right font-semibold text-amber-700">
                                           {formatCurrency(day.outstanding_amount)}
+                                        </p>
+                                        <p className="text-right font-semibold text-blue-700">
+                                          {Number(day.total_jars_delivered || 0)}
                                         </p>
                                       </div>
                                     ))}
