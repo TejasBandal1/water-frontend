@@ -96,6 +96,10 @@ const InvoiceDetail = () => {
   const invoice = data?.invoice || {};
   const items = data?.items || [];
   const payments = data?.payments || [];
+  const invoiceDriverNames = Array.isArray(invoice.driver_names) ? invoice.driver_names : [];
+  const invoiceDriverLabel =
+    invoice.driver_name ||
+    (invoiceDriverNames.length > 0 ? invoiceDriverNames.join(", ") : "Unassigned");
   const balance = Number(invoice.total_amount || 0) - Number(invoice.amount_paid || 0);
 
   const progress =
@@ -284,6 +288,9 @@ const InvoiceDetail = () => {
             </p>
             <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-300">
               Client: {clientName}
+            </p>
+            <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-300">
+              Driver: {invoiceDriverLabel}
             </p>
           </div>
 

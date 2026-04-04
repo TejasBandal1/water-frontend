@@ -175,10 +175,12 @@ export const getRevenuePerClient = async (fromDate, toDate) => {
   return res.data;
 };
 
-export const getOutstanding = async (clientId) => {
+export const getOutstanding = async (clientId, fromDate, toDate) => {
   const res = await API.get("/analytics/outstanding", {
     params: {
-      client_id: clientId || undefined
+      client_id: clientId || undefined,
+      from_date: fromDate || undefined,
+      to_date: toDate || undefined
     }
   });
   return res.data;
@@ -215,6 +217,19 @@ export const getPaymentBreakdown = async (fromDate, toDate, clientId) => {
       from_date: fromDate || undefined,
       to_date: toDate || undefined,
       client_id: clientId || undefined
+    }
+  });
+
+  return res.data;
+};
+
+export const getDriverDeliverySummary = async (fromDate, toDate, search, driverId) => {
+  const res = await API.get("/analytics/driver-delivery-summary", {
+    params: {
+      from_date: fromDate || undefined,
+      to_date: toDate || undefined,
+      search: search?.trim() || undefined,
+      driver_id: driverId || undefined
     }
   });
 

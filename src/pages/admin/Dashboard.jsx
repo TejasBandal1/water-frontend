@@ -3,7 +3,8 @@ import {
   getOutstanding,
   getMonthlyRevenue,
   getContainerLoss,
-  getContainers
+  getContainers,
+  getDriverDeliverySummary
 } from "../../api/admin";
 
 import {
@@ -24,11 +25,25 @@ const AdminDashboard = () => {
   const [revenueData, setRevenueData] = useState([]);
   const [containerData, setContainerData] = useState([]);
   const [containers, setContainers] = useState([]);
+  const [driverRows, setDriverRows] = useState([]);
+  const [driverSummary, setDriverSummary] = useState({});
+  const [driverSearch, setDriverSearch] = useState("");
+  const [driverFromDate, setDriverFromDate] = useState("");
+  const [driverToDate, setDriverToDate] = useState("");
+  const [driverLoading, setDriverLoading] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchData();
   }, [period]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchDriverDeliveryData();
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [driverFromDate, driverToDate, driverSearch]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -50,13 +65,39 @@ const AdminDashboard = () => {
     }
   };
 
+  const fetchDriverDeliveryData = async () => {
+    setDriverLoading(true);
+    try {
+      const response = await getDriverDeliverySummary(
+        driverFromDate,
+        driverToDate,
+        driverSearch
+      );
+      setDriverRows(response?.rows || []);
+      setDriverSummary(response?.summary || {});
+    } catch (err) {
+      console.error("Driver delivery summary error:", err);
+    } finally {
+      setDriverLoading(false);
+    }
+  };
+
   /* ================= FORMATTERS ================= */
 
   const formatCurrency = (v) =>
     `Rs. ${Number(v || 0).toLocaleString("en-IN")}`;
 
+  const formatCount = (v) =>
+    Number(v || 0).toLocaleString("en-IN");
+
   const getContainerName = (id) =>
     containers.find((c) => c.id === id)?.name || `Container ${id}`;
+
+  const resetDriverFilters = () => {
+    setDriverSearch("");
+    setDriverFromDate("");
+    setDriverToDate("");
+  };
 
   /* ================= CALCULATIONS ================= */
 
@@ -212,6 +253,91 @@ const AdminDashboard = () => {
           )}
         </ChartCard>
       </div>
+
+      <section className="panel mt-8 p-5 sm:p-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">Driver Delivery Summary</h2>
+            <p className="text-sm text-slate-500">
+              Track driver-wise delivered jars with searchable and date-range filters.
+            </p>
+          </div>
+
+          <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:w-auto lg:grid-cols-4">
+            <input
+              value={driverSearch}
+              onChange={(e) => setDriverSearch(e.target.value)}
+              placeholder="Search driver name or email"
+              className="form-input"
+            />
+            <input
+              type="date"
+              value={driverFromDate}
+              onChange={(e) => setDriverFromDate(e.target.value)}
+              className="form-input"
+            />
+            <input
+              type="date"
+              value={driverToDate}
+              onChange={(e) => setDriverToDate(e.target.value)}
+              className="form-input"
+            />
+            <button
+              onClick={resetDriverFilters}
+              className="btn-secondary w-full"
+            >
+              Reset
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <CompactInfo label="Drivers" value={formatCount(driverSummary.drivers_count)} />
+          <CompactInfo label="Trips" value={formatCount(driverSummary.total_trip_count)} />
+          <CompactInfo label="Delivered Jars" value={formatCount(driverSummary.total_jars_delivered)} />
+          <CompactInfo label="Net Outstanding" value={formatCount(driverSummary.total_net_jars_outstanding)} />
+        </div>
+
+        <div className="mt-5">
+          {driverLoading ? (
+            <div className="flex h-40 items-center justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-black border-t-transparent"></div>
+            </div>
+          ) : driverRows.length === 0 ? (
+            <EmptyState message="No driver delivery data found for selected filters." />
+          ) : (
+            <div className="table-shell">
+              <table className="table-main">
+                <thead>
+                  <tr>
+                    <th>Driver</th>
+                    <th>Trips</th>
+                    <th>Delivered</th>
+                    <th>Returned</th>
+                    <th>Net Outstanding</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {driverRows.map((row) => (
+                    <tr key={row.driver_id}>
+                      <td>
+                        <p className="font-semibold text-slate-900">{row.driver_name || "Unknown Driver"}</p>
+                        <p className="text-xs text-slate-500">{row.driver_email || "-"}</p>
+                      </td>
+                      <td>{formatCount(row.trip_count)}</td>
+                      <td className="font-semibold text-emerald-700">{formatCount(row.total_jars_delivered)}</td>
+                      <td>{formatCount(row.total_jars_returned)}</td>
+                      <td className={Number(row.net_jars_outstanding || 0) > 0 ? "font-semibold text-amber-700" : "font-semibold text-slate-700"}>
+                        {formatCount(row.net_jars_outstanding)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 };
@@ -258,6 +384,13 @@ const ChartCard = ({ title, subtitle, children }) => (
       <p className="mb-4 text-sm text-slate-500">{subtitle}</p>
     )}
     {children}
+  </div>
+);
+
+const CompactInfo = ({ label, value }) => (
+  <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{label}</p>
+    <p className="mt-1 text-lg font-bold text-slate-900">{value}</p>
   </div>
 );
 

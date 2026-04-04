@@ -14,7 +14,29 @@ import {
   isWithinLocalDateRange
 } from "../../utils/dateTime";
 
-const ITEMS_PER_PAGE = 8;
+const DEFAULT_PAGE_SIZE = 8;
+const PAGE_SIZE_OPTIONS = [8, 20, 50, 100];
+
+const getPaginationTokens = (currentPage, totalPages) => {
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, idx) => idx + 1);
+  }
+
+  const tokens = [1];
+  const start = Math.max(2, currentPage - 1);
+  const end = Math.min(totalPages - 1, currentPage + 1);
+
+  if (start > 2) tokens.push("left-ellipsis");
+
+  for (let page = start; page <= end; page += 1) {
+    tokens.push(page);
+  }
+
+  if (end < totalPages - 1) tokens.push("right-ellipsis");
+
+  tokens.push(totalPages);
+  return tokens;
+};
 
 const STATUS_STYLES = {
   draft: "bg-amber-100 text-amber-700 ring-1 ring-amber-200",
@@ -39,6 +61,8 @@ const Invoices = () => {
   const [toDate, setToDate] = useState("");
 
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [pageInput, setPageInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState("");
 
@@ -137,9 +161,17 @@ const Invoices = () => {
     return invoices
       .filter((inv) => {
         const clientName = inv.client_name?.toLowerCase() || "";
+        const driverSearchText = [
+          inv.driver_name || "",
+          ...(Array.isArray(inv.driver_names) ? inv.driver_names : [])
+        ]
+          .join(" ")
+          .toLowerCase();
+        const searchValue = searchTerm.toLowerCase();
 
         return (
-          (clientName.includes(searchTerm.toLowerCase()) ||
+          (clientName.includes(searchValue) ||
+            driverSearchText.includes(searchValue) ||
             inv.id.toString().includes(searchTerm)) &&
           (selectedClient === "all" ||
             inv.client_id === Number(selectedClient)) &&
@@ -157,11 +189,11 @@ const Invoices = () => {
     toDate
   ]);
 
-  const totalPages = Math.ceil(filteredInvoices.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredInvoices.length / pageSize);
 
   const paginatedInvoices = filteredInvoices.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
   );
 
   const totalBilled = invoices
@@ -187,6 +219,42 @@ const Invoices = () => {
     setFromDate("");
     setToDate("");
     setCurrentPage(1);
+  };
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedClient, selectedStatus, fromDate, toDate, pageSize]);
+
+  useEffect(() => {
+    if (totalPages === 0 && currentPage !== 1) {
+      setCurrentPage(1);
+      return;
+    }
+
+    if (totalPages > 0 && currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
+
+  const firstItemIndex = filteredInvoices.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const lastItemIndex = Math.min(currentPage * pageSize, filteredInvoices.length);
+  const paginationTokens = useMemo(
+    () => getPaginationTokens(currentPage, totalPages),
+    [currentPage, totalPages]
+  );
+
+  const goToPage = (page) => {
+    if (!totalPages) return;
+    const target = Math.min(Math.max(page, 1), totalPages);
+    setCurrentPage(target);
+  };
+
+  const submitPageJump = (e) => {
+    e.preventDefault();
+    const target = Number(pageInput);
+    if (!target || Number.isNaN(target)) return;
+    goToPage(target);
+    setPageInput("");
   };
 
   return (
@@ -228,7 +296,7 @@ const Invoices = () => {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-6">
           <FilterField label="Search">
             <input
-              placeholder="Invoice ID or client"
+              placeholder="Invoice ID, client, or driver"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="form-input"
@@ -284,12 +352,25 @@ const Invoices = () => {
           </FilterField>
 
           <FilterField label="Actions">
-            <button
-              onClick={resetFilters}
-              className="btn-secondary w-full"
-            >
-              Reset Filters
-            </button>
+            <div className="flex flex-col gap-2">
+              <select
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+                className="form-select"
+              >
+                {PAGE_SIZE_OPTIONS.map((size) => (
+                  <option key={size} value={size}>
+                    {size} / page
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={resetFilters}
+                className="btn-secondary w-full"
+              >
+                Reset Filters
+              </button>
+            </div>
           </FilterField>
         </div>
       </section>
@@ -302,130 +383,322 @@ const Invoices = () => {
         ) : paginatedInvoices.length === 0 ? (
           <div className="empty-state">No invoices found for selected filters.</div>
         ) : (
-          <table className="table-main">
-            <thead>
-              <tr>
-                <th>Invoice</th>
-                <th>Client</th>
-                <th>Created</th>
-                <th>Total</th>
-                <th>Balance</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
+          <>
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-1 text-xs font-medium text-slate-600 sm:text-sm">
+              <span>
+                Showing {firstItemIndex}-{lastItemIndex} of {filteredInvoices.length} invoices
+              </span>
+              <span>
+                Page {currentPage} of {Math.max(totalPages, 1)}
+              </span>
+            </div>
 
-            <tbody>
+            <div className="space-y-3 md:hidden">
               {paginatedInvoices.map((inv) => {
                 const balance = inv.total_amount - inv.amount_paid;
                 const canAdjust =
                   ["draft", "pending", "overdue"].includes(inv.status) &&
                   Number(inv.amount_paid || 0) === 0;
+                const driverNames = Array.isArray(inv.driver_names) ? inv.driver_names : [];
+                const driverLabel = inv.driver_name
+                  || (driverNames.length === 1 ? driverNames[0] : null)
+                  || (driverNames.length > 1 ? `Multiple (${driverNames.length})` : "Unassigned");
 
                 return (
-                  <tr key={inv.id}>
-                    <td className="font-semibold text-slate-900">#{inv.id}</td>
-                    <td>{inv.client_name}</td>
-                    <td className="text-slate-600">{formatDate(inv.created_at)}</td>
-                    <td className="font-semibold text-slate-800">{formatCurrency(inv.total_amount)}</td>
-                    <td className={`font-semibold ${balance > 0 ? "text-red-600" : "text-emerald-600"}`}>
-                      {formatCurrency(balance)}
-                    </td>
-                    <td>
-                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS_STYLES[inv.status] || "bg-slate-100 text-slate-700"}`}>
+                  <div key={`mobile_${inv.id}`} className="rounded-xl border border-slate-200 bg-white p-3 shadow-[0_6px_16px_rgba(15,23,42,0.05)]">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">Invoice #{inv.id}</p>
+                        <p className="text-xs text-slate-500">{formatDate(inv.created_at)}</p>
+                      </div>
+                      <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${STATUS_STYLES[inv.status] || "bg-slate-100 text-slate-700"}`}>
                         {inv.status.toUpperCase()}
                       </span>
-                    </td>
-                    <td>
-                      <div className="flex flex-wrap gap-2">
-                        <Link
-                          to={`/admin/invoices/${inv.id}`}
-                          className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-blue-700"
-                        >
-                          View
-                        </Link>
+                    </div>
 
-                        {inv.status === "draft" && (
-                          <button
-                            onClick={() =>
-                              openActionModal({
-                                type: "confirm",
-                                invoiceId: inv.id,
-                                title: `Confirm Invoice #${inv.id}`,
-                                message:
-                                  "This will lock draft values and set invoice due date. Continue?",
-                                confirmLabel: "Confirm Invoice",
-                                requiresReason: false
-                              })
-                            }
-                            className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700"
-                          >
-                            Confirm
-                          </button>
-                        )}
-
-                        {canAdjust && (
-                          <button
-                            onClick={() =>
-                              openActionModal({
-                                type: "void_reissue",
-                                invoiceId: inv.id,
-                                title: `Void and Reissue #${inv.id}`,
-                                message:
-                                  "Old invoice will be cancelled and a corrected draft will be generated using latest pricing.",
-                                confirmLabel: "Void and Reissue",
-                                requiresReason: true
-                              })
-                            }
-                            className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-amber-700"
-                          >
-                            Void & Reissue
-                          </button>
-                        )}
-
-                        {canAdjust && (
-                          <button
-                            onClick={() =>
-                              openActionModal({
-                                type: "cancel",
-                                invoiceId: inv.id,
-                                title: `Cancel Invoice #${inv.id}`,
-                                message:
-                                  "This will cancel the invoice without reissuing. Provide reason for audit.",
-                                confirmLabel: "Cancel Invoice",
-                                requiresReason: true
-                              })
-                            }
-                            className="rounded-lg bg-slate-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-700"
-                          >
-                            Cancel
-                          </button>
-                        )}
+                    <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <p className="text-slate-500">Client</p>
+                        <p className="font-semibold text-slate-800">{inv.client_name || "-"}</p>
                       </div>
-                    </td>
-                  </tr>
+                      <div>
+                        <p className="text-slate-500">Driver</p>
+                        <p className="font-semibold text-slate-800">{driverLabel}</p>
+                      </div>
+                      <div>
+                        <p className="text-slate-500">Total</p>
+                        <p className="font-semibold text-slate-900">{formatCurrency(inv.total_amount)}</p>
+                      </div>
+                      <div>
+                        <p className="text-slate-500">Balance</p>
+                        <p className={`font-semibold ${balance > 0 ? "text-red-600" : "text-emerald-600"}`}>
+                          {formatCurrency(balance)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <Link
+                        to={`/admin/invoices/${inv.id}`}
+                        className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-blue-700"
+                      >
+                        View
+                      </Link>
+
+                      {inv.status === "draft" && (
+                        <button
+                          onClick={() =>
+                            openActionModal({
+                              type: "confirm",
+                              invoiceId: inv.id,
+                              title: `Confirm Invoice #${inv.id}`,
+                              message:
+                                "This will lock draft values and set invoice due date. Continue?",
+                              confirmLabel: "Confirm Invoice",
+                              requiresReason: false
+                            })
+                          }
+                          className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700"
+                        >
+                          Confirm
+                        </button>
+                      )}
+
+                      {canAdjust && (
+                        <button
+                          onClick={() =>
+                            openActionModal({
+                              type: "void_reissue",
+                              invoiceId: inv.id,
+                              title: `Void and Reissue #${inv.id}`,
+                              message:
+                                "Old invoice will be cancelled and a corrected draft will be generated using latest pricing.",
+                              confirmLabel: "Void and Reissue",
+                              requiresReason: true
+                            })
+                          }
+                          className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-amber-700"
+                        >
+                          Void & Reissue
+                        </button>
+                      )}
+
+                      {canAdjust && (
+                        <button
+                          onClick={() =>
+                            openActionModal({
+                              type: "cancel",
+                              invoiceId: inv.id,
+                              title: `Cancel Invoice #${inv.id}`,
+                              message:
+                                "This will cancel the invoice without reissuing. Provide reason for audit.",
+                              confirmLabel: "Cancel Invoice",
+                              requiresReason: true
+                            })
+                          }
+                          className="rounded-lg bg-slate-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-700"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 );
               })}
-            </tbody>
-          </table>
+            </div>
+
+            <table className="table-main hidden md:table">
+              <thead>
+                <tr>
+                  <th>Invoice</th>
+                  <th>Client</th>
+                  <th>Driver</th>
+                  <th>Created</th>
+                  <th>Total</th>
+                  <th>Balance</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {paginatedInvoices.map((inv) => {
+                  const balance = inv.total_amount - inv.amount_paid;
+                  const canAdjust =
+                    ["draft", "pending", "overdue"].includes(inv.status) &&
+                    Number(inv.amount_paid || 0) === 0;
+                  const driverNames = Array.isArray(inv.driver_names) ? inv.driver_names : [];
+                  const driverLabel = inv.driver_name
+                    || (driverNames.length === 1 ? driverNames[0] : null)
+                    || (driverNames.length > 1 ? `Multiple (${driverNames.length})` : "Unassigned");
+
+                  return (
+                    <tr key={inv.id}>
+                      <td className="font-semibold text-slate-900">#{inv.id}</td>
+                      <td>{inv.client_name}</td>
+                      <td>{driverLabel}</td>
+                      <td className="text-slate-600">{formatDate(inv.created_at)}</td>
+                      <td className="font-semibold text-slate-800">{formatCurrency(inv.total_amount)}</td>
+                      <td className={`font-semibold ${balance > 0 ? "text-red-600" : "text-emerald-600"}`}>
+                        {formatCurrency(balance)}
+                      </td>
+                      <td>
+                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS_STYLES[inv.status] || "bg-slate-100 text-slate-700"}`}>
+                          {inv.status.toUpperCase()}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="flex flex-wrap gap-2">
+                          <Link
+                            to={`/admin/invoices/${inv.id}`}
+                            className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-blue-700"
+                          >
+                            View
+                          </Link>
+
+                          {inv.status === "draft" && (
+                            <button
+                              onClick={() =>
+                                openActionModal({
+                                  type: "confirm",
+                                  invoiceId: inv.id,
+                                  title: `Confirm Invoice #${inv.id}`,
+                                  message:
+                                    "This will lock draft values and set invoice due date. Continue?",
+                                  confirmLabel: "Confirm Invoice",
+                                  requiresReason: false
+                                })
+                              }
+                              className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700"
+                            >
+                              Confirm
+                            </button>
+                          )}
+
+                          {canAdjust && (
+                            <button
+                              onClick={() =>
+                                openActionModal({
+                                  type: "void_reissue",
+                                  invoiceId: inv.id,
+                                  title: `Void and Reissue #${inv.id}`,
+                                  message:
+                                    "Old invoice will be cancelled and a corrected draft will be generated using latest pricing.",
+                                  confirmLabel: "Void and Reissue",
+                                  requiresReason: true
+                                })
+                              }
+                              className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-amber-700"
+                            >
+                              Void & Reissue
+                            </button>
+                          )}
+
+                          {canAdjust && (
+                            <button
+                              onClick={() =>
+                                openActionModal({
+                                  type: "cancel",
+                                  invoiceId: inv.id,
+                                  title: `Cancel Invoice #${inv.id}`,
+                                  message:
+                                    "This will cancel the invoice without reissuing. Provide reason for audit.",
+                                  confirmLabel: "Cancel Invoice",
+                                  requiresReason: true
+                                })
+                              }
+                              className="rounded-lg bg-slate-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-700"
+                            >
+                              Cancel
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </>
         )}
       </section>
 
       {totalPages > 1 && (
-        <div className="mt-6 flex justify-center gap-2">
-          {[...Array(totalPages)].map((_, i) => (
+        <div className="mt-6 rounded-xl border border-slate-200 bg-white p-3 shadow-[0_4px_12px_rgba(15,23,42,0.04)]">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-between">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => goToPage(1)}
+                disabled={currentPage === 1}
+                className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                First
+              </button>
+              <button
+                onClick={() => goToPage(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Prev
+              </button>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-1.5">
+              {paginationTokens.map((token) =>
+                typeof token === "number" ? (
+                  <button
+                    key={`page_${token}`}
+                    onClick={() => goToPage(token)}
+                    className={`min-w-[34px] rounded-lg px-2.5 py-1.5 text-xs font-semibold ${
+                      currentPage === token
+                        ? "bg-slate-900 text-white"
+                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                    }`}
+                  >
+                    {token}
+                  </button>
+                ) : (
+                  <span key={token} className="px-1 text-slate-500">...</span>
+                )
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => goToPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Next
+              </button>
+              <button
+                onClick={() => goToPage(totalPages)}
+                disabled={currentPage === totalPages}
+                className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Last
+              </button>
+            </div>
+          </div>
+
+          <form onSubmit={submitPageJump} className="mt-3 flex items-center justify-center gap-2 text-xs text-slate-600">
+            <span>Go to page</span>
+            <input
+              type="number"
+              min={1}
+              max={totalPages}
+              value={pageInput}
+              onChange={(e) => setPageInput(e.target.value)}
+              className="w-20 rounded-md border border-slate-300 px-2 py-1 text-center text-xs"
+              placeholder={`${currentPage}`}
+            />
             <button
-              key={i}
-              onClick={() => setCurrentPage(i + 1)}
-              className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
-                currentPage === i + 1
-                  ? "bg-slate-900 text-white"
-                  : "bg-slate-200 text-slate-700"
-              }`}
+              type="submit"
+              className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white"
             >
-              {i + 1}
+              Go
             </button>
-          ))}
+          </form>
         </div>
       )}
 

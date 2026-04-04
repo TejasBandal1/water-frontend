@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -44,6 +44,7 @@ const Analytics = () => {
   });
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
+  const requestIdRef = useRef(0);
 
   const loadClients = useCallback(async () => {
     try {
@@ -59,16 +60,20 @@ const Analytics = () => {
   }, [loadClients]);
 
   const fetchData = useCallback(async () => {
+    requestIdRef.current += 1;
+    const requestId = requestIdRef.current;
     setLoading(true);
     try {
       const clientId = selectedClientId ? Number(selectedClientId) : undefined;
 
       const [outstandingRes, revenueRes, containerRes, paymentRes] = await Promise.all([
-        getOutstanding(clientId),
+        getOutstanding(clientId, fromDate, toDate),
         getMonthlyRevenue(period, fromDate, toDate, clientId),
         getContainerLoss(fromDate, toDate, clientId),
         getPaymentBreakdown(fromDate, toDate, clientId)
       ]);
+
+      if (requestId !== requestIdRef.current) return;
 
       setSummary(outstandingRes || {});
       setRevenueData(revenueRes || []);
@@ -83,7 +88,9 @@ const Analytics = () => {
     } catch (err) {
       console.error("Analytics error:", err);
     } finally {
-      setLoading(false);
+      if (requestId === requestIdRef.current) {
+        setLoading(false);
+      }
     }
   }, [period, fromDate, toDate, selectedClientId]);
 
