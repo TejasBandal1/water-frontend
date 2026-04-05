@@ -258,7 +258,7 @@ const Invoices = () => {
   };
 
   return (
-    <div className="page-shell">
+    <div className={`page-shell ${totalPages > 1 ? "pb-28 md:pb-0" : ""}`}>
       <section className="page-hero">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
@@ -437,10 +437,10 @@ const Invoices = () => {
                       </div>
                     </div>
 
-                    <div className="mt-3 flex flex-wrap gap-2">
+                    <div className="mt-3 grid grid-cols-2 gap-2">
                       <Link
                         to={`/admin/invoices/${inv.id}`}
-                        className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-blue-700"
+                        className="rounded-lg bg-blue-600 px-3 py-2 text-center text-xs font-semibold text-white transition hover:bg-blue-700"
                       >
                         View
                       </Link>
@@ -458,7 +458,7 @@ const Invoices = () => {
                               requiresReason: false
                             })
                           }
-                          className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700"
+                          className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-700"
                         >
                           Confirm
                         </button>
@@ -477,7 +477,7 @@ const Invoices = () => {
                               requiresReason: true
                             })
                           }
-                          className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-amber-700"
+                          className="rounded-lg bg-amber-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-amber-700"
                         >
                           Void & Reissue
                         </button>
@@ -496,7 +496,7 @@ const Invoices = () => {
                               requiresReason: true
                             })
                           }
-                          className="rounded-lg bg-slate-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-700"
+                          className="rounded-lg bg-slate-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-700"
                         >
                           Cancel
                         </button>
@@ -624,7 +624,7 @@ const Invoices = () => {
       </section>
 
       {totalPages > 1 && (
-        <div className="mt-6 rounded-xl border border-slate-200 bg-white p-3 shadow-[0_4px_12px_rgba(15,23,42,0.04)]">
+        <div className="mt-6 hidden rounded-xl border border-slate-200 bg-white p-3 shadow-[0_4px_12px_rgba(15,23,42,0.04)] md:block">
           <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-between">
             <div className="flex items-center gap-2">
               <button
@@ -699,6 +699,80 @@ const Invoices = () => {
               Go
             </button>
           </form>
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="fixed inset-x-3 bottom-3 z-30 md:hidden">
+          <div className="rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-[0_12px_28px_rgba(15,23,42,0.18)] backdrop-blur">
+            <div className="flex items-center justify-between gap-2">
+              <button
+                onClick={() => goToPage(1)}
+                disabled={currentPage === 1}
+                className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                First
+              </button>
+              <button
+                onClick={() => goToPage(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Prev
+              </button>
+
+              <div className="min-w-[90px] text-center">
+                <p className="text-[10px] uppercase tracking-wide text-slate-500">Page</p>
+                <p className="text-sm font-bold text-slate-900">{currentPage} / {totalPages}</p>
+              </div>
+
+              <button
+                onClick={() => goToPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Next
+              </button>
+              <button
+                onClick={() => goToPage(totalPages)}
+                disabled={currentPage === totalPages}
+                className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Last
+              </button>
+            </div>
+
+            <form onSubmit={submitPageJump} className="mt-2 grid grid-cols-3 gap-2">
+              <select
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+                className="rounded-lg border border-slate-300 px-2 py-1.5 text-[11px] font-semibold text-slate-700"
+              >
+                {PAGE_SIZE_OPTIONS.map((size) => (
+                  <option key={`mobile_size_${size}`} value={size}>
+                    {size}/page
+                  </option>
+                ))}
+              </select>
+
+              <input
+                type="number"
+                min={1}
+                max={totalPages}
+                value={pageInput}
+                onChange={(e) => setPageInput(e.target.value)}
+                className="rounded-lg border border-slate-300 px-2 py-1.5 text-center text-[11px]"
+                placeholder={`Go ${currentPage}`}
+              />
+
+              <button
+                type="submit"
+                className="rounded-lg bg-slate-900 px-2 py-1.5 text-[11px] font-semibold text-white"
+              >
+                Jump
+              </button>
+            </form>
+          </div>
         </div>
       )}
 
