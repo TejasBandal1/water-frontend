@@ -17,6 +17,7 @@ import {
 import {
   getClients,
   getContainerLoss,
+  getDriverDeliverySummary,
   getMonthlyRevenue,
   getOutstanding,
   getPaymentBreakdown
@@ -24,12 +25,58 @@ import {
 
 const PIE_COLORS = ["#16a34a", "#f59e0b", "#dc2626"];
 const PAYMENT_CHANNEL_COLORS = ["#0f766e", "#2563eb"];
+const DRIVER_CHART_COLORS = ["#0ea5e9", "#16a34a"];
+
+const DATE_PRESET_OPTIONS = [
+  { value: "7d", label: "Last 7 Days" },
+  { value: "30d", label: "Last 30 Days" },
+  { value: "mtd", label: "Month to Date" },
+  { value: "qtd", label: "Quarter to Date" },
+  { value: "ytd", label: "Year to Date" },
+  { value: "all", label: "All Time" }
+];
+
+const formatInputDate = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const resolvePresetRange = (preset) => {
+  if (preset === "all") {
+    return { fromDate: "", toDate: "" };
+  }
+
+  const today = new Date();
+  const to = new Date(today);
+  const from = new Date(today);
+
+  if (preset === "7d") {
+    from.setDate(from.getDate() - 6);
+  } else if (preset === "30d") {
+    from.setDate(from.getDate() - 29);
+  } else if (preset === "mtd") {
+    from.setDate(1);
+  } else if (preset === "qtd") {
+    const quarterStartMonth = Math.floor(from.getMonth() / 3) * 3;
+    from.setMonth(quarterStartMonth, 1);
+  } else if (preset === "ytd") {
+    from.setMonth(0, 1);
+  }
+
+  return {
+    fromDate: formatInputDate(from),
+    toDate: formatInputDate(to)
+  };
+};
 
 const Analytics = () => {
   const [period, setPeriod] = useState("monthly");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [selectedClientId, setSelectedClientId] = useState("");
+  const [activePreset, setActivePreset] = useState("all");
 
   const [clientSearch, setClientSearch] = useState("");
   const [showClientOptions, setShowClientOptions] = useState(false);
@@ -41,6 +88,16 @@ const Analytics = () => {
     summary: {},
     by_method: [],
     by_client: []
+  });
+  const [driverData, setDriverData] = useState({
+    rows: [],
+    summary: {
+      drivers_count: 0,
+      total_trip_count: 0,
+      total_jars_delivered: 0,
+      total_jars_returned: 0,
+      total_net_jars_outstanding: 0
+    }
   });
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -66,11 +123,12 @@ const Analytics = () => {
     try {
       const clientId = selectedClientId ? Number(selectedClientId) : undefined;
 
-      const [outstandingRes, revenueRes, containerRes, paymentRes] = await Promise.all([
+      const [outstandingRes, revenueRes, containerRes, paymentRes, driverRes] = await Promise.all([
         getOutstanding(clientId, fromDate, toDate),
         getMonthlyRevenue(period, fromDate, toDate, clientId),
         getContainerLoss(fromDate, toDate, clientId),
-        getPaymentBreakdown(fromDate, toDate, clientId)
+        getPaymentBreakdown(fromDate, toDate, clientId),
+        getDriverDeliverySummary(fromDate, toDate)
       ]);
 
       if (requestId !== requestIdRef.current) return;
@@ -83,6 +141,18 @@ const Analytics = () => {
           summary: {},
           by_method: [],
           by_client: []
+        }
+      );
+      setDriverData(
+        driverRes || {
+          rows: [],
+          summary: {
+            drivers_count: 0,
+            total_trip_count: 0,
+            total_jars_delivered: 0,
+            total_jars_returned: 0,
+            total_net_jars_outstanding: 0
+          }
         }
       );
     } catch (err) {
@@ -160,12 +230,19 @@ const Analytics = () => {
   const paymentSummary = paymentData.summary || {};
   const paymentByMethod = paymentData.by_method || [];
   const paymentByClient = paymentData.by_client || [];
+  const driverRows = driverData.rows || [];
+  const driverSummary = driverData.summary || {};
 
   const totalCashCollected = Number(paymentSummary.total_cash_amount || 0);
   const totalUpiCollected = Number(paymentSummary.total_upi_amount || 0);
   const totalMixedTransactions = Number(paymentSummary.cash_upi_count || 0);
   const totalPaymentsCount = Number(paymentSummary.payment_count || 0);
   const totalCollectedAmount = Number(paymentSummary.total_amount || 0);
+  const totalDrivers = Number(driverSummary.drivers_count || 0);
+  const totalTrips = Number(driverSummary.total_trip_count || 0);
+  const driverDelivered = Number(driverSummary.total_jars_delivered || 0);
+  const driverReturned = Number(driverSummary.total_jars_returned || 0);
+  const driverOutstanding = Number(driverSummary.total_net_jars_outstanding || 0);
 
   const paymentChannelPieData = useMemo(() => {
     const data = [
@@ -198,6 +275,7 @@ const Analytics = () => {
   }, [paymentByMethod, totalCollectedAmount]);
 
   const topClientByCollection = paymentByClient.length > 0 ? paymentByClient[0] : null;
+  const topDriverByDelivery = driverRows.length > 0 ? driverRows[0] : null;
 
   const activeRangeLabel = useMemo(() => {
     if (fromDate && toDate) return `${fromDate} to ${toDate}`;
@@ -227,6 +305,23 @@ const Analytics = () => {
       ? totalRevenue / revenueData.length
       : 0;
 
+  const revenueMomentum = useMemo(() => {
+    if (!revenueData || revenueData.length < 2) {
+      return { delta: 0, percent: 0, direction: "neutral" };
+    }
+
+    const current = Number(revenueData[revenueData.length - 1]?.revenue || 0);
+    const previous = Number(revenueData[revenueData.length - 2]?.revenue || 0);
+    const delta = current - previous;
+    const percent = previous > 0 ? (delta / previous) * 100 : (current > 0 ? 100 : 0);
+
+    return {
+      delta,
+      percent: Number(percent.toFixed(1)),
+      direction: delta > 0 ? "up" : delta < 0 ? "down" : "neutral"
+    };
+  }, [revenueData]);
+
   const revenueSeries = useMemo(
     () =>
       revenueData.map((row) => ({
@@ -247,6 +342,18 @@ const Analytics = () => {
         }))
         .sort((a, b) => b.outstanding - a.outstanding),
     [containerData]
+  );
+
+  const driverPerformanceSeries = useMemo(
+    () =>
+      driverRows.slice(0, 8).map((row) => ({
+        name: truncateName(row.driver_name || row.driver_email || `Driver ${row.driver_id}`),
+        delivered: Number(row.total_jars_delivered || 0),
+        returned: Number(row.total_jars_returned || 0),
+        outstanding: Number(row.net_jars_outstanding || 0),
+        trips: Number(row.trip_count || 0)
+      })),
+    [driverRows]
   );
 
   const collectionPieData = useMemo(() => {
@@ -295,6 +402,8 @@ const Analytics = () => {
 
       <section className="panel mb-8 p-5">
         <div className="grid w-full gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <div>
+            <label className="form-label">Period</label>
             <select
               value={period}
               onChange={(e) => setPeriod(e.target.value)}
@@ -305,7 +414,10 @@ const Analytics = () => {
               <option value="monthly">Monthly</option>
               <option value="yearly">Yearly</option>
             </select>
+          </div>
 
+          <div className="relative sm:col-span-2">
+            <label className="form-label">Client</label>
             <div className="relative">
               <input
                 type="text"
@@ -370,21 +482,60 @@ const Analytics = () => {
                 </div>
               )}
             </div>
+          </div>
 
+          <div>
+            <label className="form-label">From</label>
             <input
               type="date"
               value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
+              onChange={(e) => {
+                setFromDate(e.target.value);
+                setActivePreset("");
+              }}
               className="form-input"
             />
+          </div>
 
+          <div>
+            <label className="form-label">To</label>
             <input
               type="date"
               value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
+              onChange={(e) => {
+                setToDate(e.target.value);
+                setActivePreset("");
+              }}
               className="form-input"
             />
+          </div>
 
+          <div className="sm:col-span-2 lg:col-span-5">
+            <label className="form-label">Quick Ranges</label>
+            <div className="flex flex-wrap gap-2">
+              {DATE_PRESET_OPTIONS.map((preset) => (
+                <button
+                  key={preset.value}
+                  type="button"
+                  onClick={() => {
+                    const range = resolvePresetRange(preset.value);
+                    setFromDate(range.fromDate);
+                    setToDate(range.toDate);
+                    setActivePreset(preset.value);
+                  }}
+                  className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                    activePreset === preset.value
+                      ? "border-slate-900 bg-slate-900 text-white"
+                      : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="sm:col-span-2 lg:col-span-5">
             <button
               onClick={() => {
                 setPeriod("monthly");
@@ -392,16 +543,23 @@ const Analytics = () => {
                 setToDate("");
                 setSelectedClientId("");
                 setClientSearch("");
+                setActivePreset("all");
               }}
               className="btn-secondary"
             >
               Reset Filters
             </button>
           </div>
+        </div>
       </section>
 
       <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard title="Total Revenue" value={formatCurrency(totalRevenue)} trend="up" subtitle={`Avg ${formatCurrency(averageRevenue)} per ${period.slice(0, -2) || "period"}`} />
+        <KpiCard
+          title="Total Revenue"
+          value={formatCurrency(totalRevenue)}
+          trend={revenueMomentum.direction === "down" ? "down" : "up"}
+          subtitle={`${revenueMomentum.direction === "down" ? "" : "+"}${revenueMomentum.percent}% vs previous period | Avg ${formatCurrency(averageRevenue)}`}
+        />
         <KpiCard title="Collection Rate" value={`${collectionRate}%`} trend={collectionRate >= 80 ? "up" : "down"} subtitle="Paid / billed performance" />
         <KpiCard title="Outstanding Value" value={formatCurrency(totalOutstanding)} trend="warn" subtitle={`Pending payments | ${clientLabel}`} />
         <KpiCard title="Containers Outside" value={totalContainersOutside} trend="neutral" subtitle={`Return efficiency ${returnEfficiency}%`} />
@@ -412,6 +570,13 @@ const Analytics = () => {
         <KpiCard title="UPI Collected" value={formatCurrency(totalUpiCollected)} trend="up" subtitle="Payments received via UPI" />
         <KpiCard title="Mixed Payments" value={totalMixedTransactions} trend="neutral" subtitle="Cash + UPI transactions" />
         <KpiCard title="Payment Entries" value={totalPaymentsCount} trend="neutral" subtitle={`Recorded payments | ${clientLabel}`} />
+      </section>
+
+      <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <KpiCard title="Active Drivers" value={totalDrivers} trend="neutral" subtitle="Drivers with delivery activity" />
+        <KpiCard title="Trips Logged" value={totalTrips} trend="neutral" subtitle="Trips in selected date range" />
+        <KpiCard title="Driver Delivered" value={driverDelivered} trend="up" subtitle="Total jars delivered by drivers" />
+        <KpiCard title="Driver Outstanding" value={driverOutstanding} trend="warn" subtitle={`Driver returns recorded: ${driverReturned}`} />
       </section>
 
       <section className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -431,6 +596,12 @@ const Analytics = () => {
           title="Top Paying Client"
           value={topClientByCollection ? topClientByCollection.client_name : "No data"}
           note={topClientByCollection ? `${formatCurrency(topClientByCollection.total_amount)} collected` : "No payment records in selected range"}
+          tone="up"
+        />
+        <InsightCard
+          title="Top Driver"
+          value={topDriverByDelivery ? topDriverByDelivery.driver_name : "No data"}
+          note={topDriverByDelivery ? `${Number(topDriverByDelivery.total_jars_delivered || 0)} jars delivered` : "No driver delivery records in selected range"}
           tone="up"
         />
         <InsightCard
@@ -612,6 +783,58 @@ const Analytics = () => {
             </ResponsiveContainer>
           )}
         </ChartCard>
+
+        <ChartCard
+          title="Driver Delivery Performance"
+          subtitle="Top drivers by delivered and returned jars"
+        >
+          {driverPerformanceSeries.length === 0 ? (
+            <EmptyState message="No driver delivery data for selected filters" />
+          ) : (
+            <ResponsiveContainer width="100%" height={320}>
+              <BarChart
+                data={driverPerformanceSeries}
+                margin={{ top: 8, right: 16, left: 8, bottom: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="name" tick={{ fill: "#64748b", fontSize: 12 }} />
+                <YAxis tick={{ fill: "#64748b", fontSize: 12 }} />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="delivered" fill={DRIVER_CHART_COLORS[0]} radius={[6, 6, 0, 0]} />
+                <Bar dataKey="returned" fill={DRIVER_CHART_COLORS[1]} radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </ChartCard>
+
+        <ChartCard
+          title="Driver Outstanding Load"
+          subtitle="Outstanding jars by driver"
+        >
+          {driverPerformanceSeries.length === 0 ? (
+            <EmptyState message="No outstanding driver load in selected range" />
+          ) : (
+            <ResponsiveContainer width="100%" height={320}>
+              <BarChart
+                data={driverPerformanceSeries}
+                layout="vertical"
+                margin={{ top: 8, right: 16, left: 8, bottom: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis type="number" tick={{ fill: "#64748b", fontSize: 12 }} />
+                <YAxis
+                  dataKey="name"
+                  type="category"
+                  tick={{ fill: "#64748b", fontSize: 12 }}
+                  width={90}
+                />
+                <Tooltip />
+                <Bar dataKey="outstanding" fill="#f97316" radius={[0, 6, 6, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </ChartCard>
       </section>
 
       <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -658,6 +881,45 @@ const Analytics = () => {
           <Snapshot label="Total Paid" value={formatCurrency(totalPaid)} />
           <Snapshot label="Returned Units" value={totalReturned} />
         </div>
+      </section>
+
+      <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-base font-semibold text-slate-900">Driver Performance Register</h2>
+          <p className="text-xs text-slate-500">Trips, delivered jars, returns, and outstanding load by driver</p>
+        </div>
+
+        {driverRows.length === 0 ? (
+          <div className="empty-state">No driver delivery records for selected filters.</div>
+        ) : (
+          <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200">
+            <table className="table-main min-w-[860px]">
+              <thead>
+                <tr>
+                  <th>Driver</th>
+                  <th>Trips</th>
+                  <th>Delivered</th>
+                  <th>Returned</th>
+                  <th>Outstanding</th>
+                </tr>
+              </thead>
+              <tbody>
+                {driverRows.map((row) => (
+                  <tr key={row.driver_id}>
+                    <td>
+                      <p className="font-semibold text-slate-900">{row.driver_name || `Driver ${row.driver_id}`}</p>
+                      <p className="text-xs text-slate-500">{row.driver_email || "-"}</p>
+                    </td>
+                    <td>{Number(row.trip_count || 0)}</td>
+                    <td className="font-semibold text-blue-700">{Number(row.total_jars_delivered || 0)}</td>
+                    <td className="font-semibold text-emerald-700">{Number(row.total_jars_returned || 0)}</td>
+                    <td className="font-semibold text-amber-700">{Number(row.net_jars_outstanding || 0)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
 
       <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
