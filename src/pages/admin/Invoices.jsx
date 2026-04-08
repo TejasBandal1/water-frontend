@@ -405,8 +405,8 @@ const Invoices = () => {
                 const canAdjust =
                   ["draft", "pending", "overdue"].includes(inv.status) &&
                   Number(inv.amount_paid || 0) === 0;
-                const canDeleteDraft =
-                  inv.status === "draft" &&
+                const canDeleteInvoice =
+                  ["draft", "pending", "overdue", "cancelled"].includes(inv.status) &&
                   Number(inv.amount_paid || 0) === 0;
                 const driverNames = Array.isArray(inv.driver_names) ? inv.driver_names : [];
                 const driverLabel = inv.driver_name
@@ -454,16 +454,16 @@ const Invoices = () => {
                         View
                       </Link>
 
-                      {canDeleteDraft && (
+                      {canDeleteInvoice && (
                         <button
                           onClick={() =>
                             openActionModal({
                               type: "delete",
                               invoiceId: inv.id,
-                              title: `Delete Draft Invoice #${inv.id}`,
+                              title: `Delete Invoice #${inv.id}`,
                               message:
-                                "This will permanently delete this draft invoice and remove linked trip entries. It will not reappear in generated drafts.",
-                              confirmLabel: "Delete Draft",
+                                "This will permanently delete this invoice and remove linked trip entries. Billing and delivery totals will be recalculated.",
+                              confirmLabel: "Delete Invoice",
                               requiresReason: false
                             })
                           }
@@ -555,8 +555,8 @@ const Invoices = () => {
                   const canAdjust =
                     ["draft", "pending", "overdue"].includes(inv.status) &&
                     Number(inv.amount_paid || 0) === 0;
-                  const canDeleteDraft =
-                    inv.status === "draft" &&
+                  const canDeleteInvoice =
+                    ["draft", "pending", "overdue", "cancelled"].includes(inv.status) &&
                     Number(inv.amount_paid || 0) === 0;
                   const driverNames = Array.isArray(inv.driver_names) ? inv.driver_names : [];
                   const driverLabel = inv.driver_name
@@ -587,16 +587,16 @@ const Invoices = () => {
                             View
                           </Link>
 
-                          {canDeleteDraft && (
+                          {canDeleteInvoice && (
                             <button
                               onClick={() =>
                                 openActionModal({
                                   type: "delete",
                                   invoiceId: inv.id,
-                                  title: `Delete Draft Invoice #${inv.id}`,
+                                  title: `Delete Invoice #${inv.id}`,
                                   message:
-                                    "This will permanently delete this draft invoice and remove linked trip entries. It will not reappear in generated drafts.",
-                                  confirmLabel: "Delete Draft",
+                                    "This will permanently delete this invoice and remove linked trip entries. Billing and delivery totals will be recalculated.",
+                                  confirmLabel: "Delete Invoice",
                                   requiresReason: false
                                 })
                               }
