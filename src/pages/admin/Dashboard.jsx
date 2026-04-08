@@ -130,6 +130,27 @@ const AdminDashboard = () => {
     return Number((((last - prev) / prev) * 100).toFixed(1));
   }, [revenueData]);
 
+  const revenueSeries = useMemo(
+    () =>
+      revenueData.map((row) => ({
+        label: formatPeriodLabel(row.label, period),
+        revenue: Number(row.revenue || 0)
+      })),
+    [revenueData, period]
+  );
+
+  const circulationSeries = useMemo(
+    () =>
+      containerData
+        .map((row) => ({
+          name: truncateName(getContainerName(row.container_id), 20),
+          value: Math.max(Number(row.net_outstanding || 0), 0)
+        }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 10),
+    [containerData, containers]
+  );
+
   /* ================= LOADING ================= */
 
   if (loading) {
@@ -203,21 +224,38 @@ const AdminDashboard = () => {
           title="Revenue Trend"
           subtitle={`Aggregated by ${period}`}
         >
-          {revenueData.length === 0 ? (
+          {revenueSeries.length === 0 ? (
             <EmptyState message="No revenue data available" />
           ) : (
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={revenueData}>
+              <AreaChart data={revenueSeries} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="dashboardRevenueFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.35} />
+                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0.04} />
+                  </linearGradient>
+                </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="label" />
-                <YAxis />
-                <Tooltip />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fill: "#64748b", fontSize: 12 }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  tick={{ fill: "#64748b", fontSize: 12 }}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(v) => Number(v || 0).toLocaleString("en-IN")}
+                />
+                <Tooltip content={<RevenueTooltip />} />
                 <Area
                   type="monotone"
                   dataKey="revenue"
                   stroke="#2563eb"
-                  fill="#93c5fd"
+                  fill="url(#dashboardRevenueFill)"
                   strokeWidth={3}
+                  activeDot={{ r: 4, strokeWidth: 0, fill: "#1d4ed8" }}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -229,24 +267,35 @@ const AdminDashboard = () => {
           title="Container Circulation"
           subtitle="Units currently with clients"
         >
-          {containerData.length === 0 ? (
+          {circulationSeries.length === 0 ? (
             <EmptyState message="No container data available" />
           ) : (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart
-                data={containerData.map((c) => ({
-                  name: getContainerName(c.container_id),
-                  value: Math.max(c.net_outstanding || 0, 0)
-                }))}
+                data={circulationSeries}
+                layout="vertical"
+                margin={{ top: 8, right: 16, left: 0, bottom: 0 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis />
-                <YAxis />
-                <Tooltip />
+                <XAxis
+                  type="number"
+                  tick={{ fill: "#64748b", fontSize: 12 }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  dataKey="name"
+                  type="category"
+                  width={130}
+                  tick={{ fill: "#64748b", fontSize: 12 }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <Tooltip content={<CountTooltip />} />
                 <Bar
                   dataKey="value"
                   fill="#f97316"
-                  radius={[8, 8, 0, 0]}
+                  radius={[0, 8, 8, 0]}
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -387,6 +436,38 @@ const ChartCard = ({ title, subtitle, children }) => (
   </div>
 );
 
+const RevenueTooltip = ({ active, payload, label }) => {
+  if (!active || !payload || payload.length === 0) return null;
+
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs shadow-lg">
+      <p className="font-semibold text-slate-800">{label}</p>
+      <p className="mt-1 text-slate-600">
+        Revenue:{" "}
+        <span className="font-semibold text-blue-700">
+          Rs. {Number(payload[0].value || 0).toLocaleString("en-IN")}
+        </span>
+      </p>
+    </div>
+  );
+};
+
+const CountTooltip = ({ active, payload, label }) => {
+  if (!active || !payload || payload.length === 0) return null;
+
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs shadow-lg">
+      <p className="font-semibold text-slate-800">{label}</p>
+      <p className="mt-1 text-slate-600">
+        Units Outside:{" "}
+        <span className="font-semibold text-orange-600">
+          {Number(payload[0].value || 0).toLocaleString("en-IN")}
+        </span>
+      </p>
+    </div>
+  );
+};
+
 const CompactInfo = ({ label, value }) => (
   <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
     <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{label}</p>
@@ -399,6 +480,30 @@ const EmptyState = ({ message }) => (
     {message}
   </div>
 );
+
+const formatPeriodLabel = (rawLabel, period) => {
+  const date = new Date(rawLabel);
+  if (Number.isNaN(date.getTime())) return rawLabel;
+
+  if (period === "daily") {
+    return date.toLocaleDateString("en-IN", { day: "2-digit", month: "short" });
+  }
+
+  if (period === "weekly") {
+    return `Wk ${date.toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}`;
+  }
+
+  if (period === "yearly") {
+    return date.toLocaleDateString("en-IN", { year: "numeric" });
+  }
+
+  return date.toLocaleDateString("en-IN", { month: "short", year: "2-digit" });
+};
+
+const truncateName = (value, max = 18) => {
+  if (!value) return "-";
+  return value.length > max ? `${value.slice(0, max)}...` : value;
+};
 
 export default AdminDashboard;
 
