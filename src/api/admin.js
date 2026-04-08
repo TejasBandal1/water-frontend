@@ -240,13 +240,14 @@ export const getPaymentBreakdown = async (fromDate, toDate, clientId) => {
   return res.data;
 };
 
-export const getDriverDeliverySummary = async (fromDate, toDate, search, driverId) => {
+export const getDriverDeliverySummary = async (fromDate, toDate, search, driverId, clientId) => {
   const res = await API.get("/analytics/driver-delivery-summary", {
     params: {
       from_date: fromDate || undefined,
       to_date: toDate || undefined,
       search: search?.trim() || undefined,
-      driver_id: driverId || undefined
+      driver_id: driverId || undefined,
+      client_id: clientId || undefined
     }
   });
 

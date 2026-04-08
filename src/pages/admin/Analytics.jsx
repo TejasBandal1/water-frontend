@@ -128,7 +128,7 @@ const Analytics = () => {
         getMonthlyRevenue(period, fromDate, toDate, clientId),
         getContainerLoss(fromDate, toDate, clientId),
         getPaymentBreakdown(fromDate, toDate, clientId),
-        getDriverDeliverySummary(fromDate, toDate)
+        getDriverDeliverySummary(fromDate, toDate, "", undefined, clientId)
       ]);
 
       if (requestId !== requestIdRef.current) return;
