@@ -144,14 +144,31 @@ export const voidReissueInvoice = async (invoiceId, reason) => {
   return res.data;
 };
 
-export const getMonthlyBillingSummary = async (year, month, search) => {
-  const res = await API.get("/admin/billing/monthly", {
-    params: {
-      year: year || undefined,
+export const deleteInvoice = async (invoiceId) => {
+  const res = await API.delete(`/admin/billing/${invoiceId}`);
+  return res.data;
+};
+
+export const getMonthlyBillingSummary = async (filtersOrYear, month, search) => {
+  let params;
+
+  if (typeof filtersOrYear === "object" && filtersOrYear !== null) {
+    params = {
+      period: filtersOrYear.period || undefined,
+      reference_date: filtersOrYear.referenceDate || undefined,
+      year: filtersOrYear.year || undefined,
+      month: filtersOrYear.month || undefined,
+      search: filtersOrYear.search?.trim() || undefined
+    };
+  } else {
+    params = {
+      year: filtersOrYear || undefined,
       month: month || undefined,
       search: search?.trim() || undefined
-    }
-  });
+    };
+  }
+
+  const res = await API.get("/admin/billing/monthly", { params });
   return res.data;
 };
 

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import {
   cancelInvoice,
   confirmInvoice,
+  deleteInvoice,
   generateAllInvoices,
   getClients,
   getInvoices,
@@ -128,6 +129,11 @@ const Invoices = () => {
       if (actionModal.type === "cancel") {
         await cancelInvoice(actionModal.invoiceId, actionReason.trim());
         showToast(`Invoice #${actionModal.invoiceId} cancelled`);
+      }
+
+      if (actionModal.type === "delete") {
+        await deleteInvoice(actionModal.invoiceId);
+        showToast(`Invoice #${actionModal.invoiceId} deleted`);
       }
 
       if (actionModal.type === "void_reissue") {
@@ -258,7 +264,7 @@ const Invoices = () => {
   };
 
   return (
-    <div className={`page-shell ${totalPages > 1 ? "pb-28 md:pb-0" : ""}`}>
+    <div className={`page-shell ${totalPages > 1 ? "pb-4 md:pb-0" : ""}`}>
       <section className="page-hero">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
@@ -399,6 +405,9 @@ const Invoices = () => {
                 const canAdjust =
                   ["draft", "pending", "overdue"].includes(inv.status) &&
                   Number(inv.amount_paid || 0) === 0;
+                const canDeleteDraft =
+                  inv.status === "draft" &&
+                  Number(inv.amount_paid || 0) === 0;
                 const driverNames = Array.isArray(inv.driver_names) ? inv.driver_names : [];
                 const driverLabel = inv.driver_name
                   || (driverNames.length === 1 ? driverNames[0] : null)
@@ -444,6 +453,25 @@ const Invoices = () => {
                       >
                         View
                       </Link>
+
+                      {canDeleteDraft && (
+                        <button
+                          onClick={() =>
+                            openActionModal({
+                              type: "delete",
+                              invoiceId: inv.id,
+                              title: `Delete Draft Invoice #${inv.id}`,
+                              message:
+                                "This will permanently delete this draft invoice and remove linked trip entries. It will not reappear in generated drafts.",
+                              confirmLabel: "Delete Draft",
+                              requiresReason: false
+                            })
+                          }
+                          className="rounded-lg bg-rose-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-rose-700"
+                        >
+                          Delete
+                        </button>
+                      )}
 
                       {inv.status === "draft" && (
                         <button
@@ -527,6 +555,9 @@ const Invoices = () => {
                   const canAdjust =
                     ["draft", "pending", "overdue"].includes(inv.status) &&
                     Number(inv.amount_paid || 0) === 0;
+                  const canDeleteDraft =
+                    inv.status === "draft" &&
+                    Number(inv.amount_paid || 0) === 0;
                   const driverNames = Array.isArray(inv.driver_names) ? inv.driver_names : [];
                   const driverLabel = inv.driver_name
                     || (driverNames.length === 1 ? driverNames[0] : null)
@@ -555,6 +586,25 @@ const Invoices = () => {
                           >
                             View
                           </Link>
+
+                          {canDeleteDraft && (
+                            <button
+                              onClick={() =>
+                                openActionModal({
+                                  type: "delete",
+                                  invoiceId: inv.id,
+                                  title: `Delete Draft Invoice #${inv.id}`,
+                                  message:
+                                    "This will permanently delete this draft invoice and remove linked trip entries. It will not reappear in generated drafts.",
+                                  confirmLabel: "Delete Draft",
+                                  requiresReason: false
+                                })
+                              }
+                              className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-rose-700"
+                            >
+                              Delete
+                            </button>
+                          )}
 
                           {inv.status === "draft" && (
                             <button
@@ -703,8 +753,8 @@ const Invoices = () => {
       )}
 
       {totalPages > 1 && (
-        <div className="fixed inset-x-3 bottom-3 z-30 md:hidden">
-          <div className="rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-[0_12px_28px_rgba(15,23,42,0.18)] backdrop-blur">
+        <div className="mt-4 pb-[calc(0.5rem+env(safe-area-inset-bottom))] md:hidden">
+          <div className="sticky bottom-[calc(0.5rem+env(safe-area-inset-bottom))] z-20 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-[0_10px_24px_rgba(15,23,42,0.14)] backdrop-blur">
             <div className="flex items-center justify-between gap-2">
               <button
                 onClick={() => goToPage(1)}
