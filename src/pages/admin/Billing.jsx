@@ -23,10 +23,21 @@ const BILL_STATUS_OPTIONS = [
   { value: "completed", label: "Completed" }
 ];
 
+const BILLING_PERIOD_OPTIONS = [
+  { value: "daily", label: "Daily" },
+  { value: "weekly", label: "Weekly" },
+  { value: "monthly", label: "Monthly" }
+];
+
 const getCurrentMonthValue = () => {
   const now = new Date();
   const month = String(now.getMonth() + 1).padStart(2, "0");
   return `${now.getFullYear()}-${month}`;
+};
+
+const getCurrentDateValue = () => {
+  const now = new Date();
+  return now.toISOString().slice(0, 10);
 };
 
 const getMonthLabel = (year, month) => {
@@ -43,6 +54,28 @@ const toMonthParts = (monthValue) => {
     year: Number(year),
     month: Number(month)
   };
+};
+
+const getActivePeriodLabel = (activePeriod) => {
+  const period = activePeriod?.period || "monthly";
+
+  if (period === "daily") {
+    return activePeriod?.range_start_date
+      ? formatLocalDate(activePeriod.range_start_date)
+      : "-";
+  }
+
+  if (period === "weekly") {
+    const start = activePeriod?.range_start_date
+      ? formatLocalDate(activePeriod.range_start_date)
+      : "-";
+    const end = activePeriod?.range_end_date
+      ? formatLocalDate(activePeriod.range_end_date)
+      : "-";
+    return `${start} - ${end}`;
+  }
+
+  return getMonthLabel(activePeriod?.year, activePeriod?.month);
 };
 
 const getErrorMessage = (err, fallback) => {
@@ -94,8 +127,19 @@ const getCollectionMeta = (percent) => {
 
 const Billing = () => {
   const initialMonthFilter = getCurrentMonthValue();
+  const initialReferenceDate = getCurrentDateValue();
+  const initialMonthParts = toMonthParts(initialMonthFilter);
+  const [periodFilter, setPeriodFilter] = useState("monthly");
   const [monthFilter, setMonthFilter] = useState(initialMonthFilter);
-  const [activePeriod, setActivePeriod] = useState(toMonthParts(initialMonthFilter));
+  const [referenceDate, setReferenceDate] = useState(initialReferenceDate);
+  const [activePeriod, setActivePeriod] = useState({
+    period: "monthly",
+    year: initialMonthParts.year,
+    month: initialMonthParts.month,
+    reference_date: initialReferenceDate,
+    range_start_date: initialReferenceDate,
+    range_end_date: initialReferenceDate
+  });
   const [searchInput, setSearchInput] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
   const [billStatusFilter, setBillStatusFilter] = useState("all");
@@ -210,42 +254,54 @@ const Billing = () => {
   );
 
   const loadData = async (override = {}) => {
+    const activePeriodFilter = override.periodFilter ?? periodFilter;
     const activeMonthFilter = override.monthFilter ?? monthFilter;
+    const activeReferenceDate = override.referenceDate ?? referenceDate;
     const activeSearch = override.search ?? appliedSearch;
     const activeMonthParts = toMonthParts(activeMonthFilter);
 
-    if (!activeMonthParts.year || !activeMonthParts.month) return;
+    if (
+      activePeriodFilter === "monthly" &&
+      (!activeMonthParts.year || !activeMonthParts.month)
+    ) {
+      return;
+    }
 
     try {
       setLoading(true);
       let filteredResponse;
       let allClientsResponse;
 
+      const queryPayload = {
+        period: activePeriodFilter,
+        referenceDate: activeReferenceDate,
+        year: activeMonthParts.year,
+        month: activeMonthParts.month,
+        search: activeSearch
+      };
+
+      const allPayload = {
+        ...queryPayload,
+        search: ""
+      };
+
       if (activeSearch) {
         [filteredResponse, allClientsResponse] = await Promise.all([
-          getMonthlyBillingSummary(
-            activeMonthParts.year,
-            activeMonthParts.month,
-            activeSearch
-          ),
-          getMonthlyBillingSummary(
-            activeMonthParts.year,
-            activeMonthParts.month,
-            ""
-          )
+          getMonthlyBillingSummary(queryPayload),
+          getMonthlyBillingSummary(allPayload)
         ]);
       } else {
-        filteredResponse = await getMonthlyBillingSummary(
-          activeMonthParts.year,
-          activeMonthParts.month,
-          ""
-        );
+        filteredResponse = await getMonthlyBillingSummary(allPayload);
         allClientsResponse = filteredResponse;
       }
 
       setActivePeriod({
+        period: filteredResponse?.period || activePeriodFilter,
         year: Number(filteredResponse?.year || activeMonthParts.year),
-        month: Number(filteredResponse?.month || activeMonthParts.month)
+        month: Number(filteredResponse?.month || activeMonthParts.month),
+        reference_date: filteredResponse?.reference_date || activeReferenceDate,
+        range_start_date: filteredResponse?.range_start_date || activeReferenceDate,
+        range_end_date: filteredResponse?.range_end_date || activeReferenceDate
       });
       setRows(filteredResponse?.rows || []);
       setAllRows(allClientsResponse?.rows || []);
@@ -259,7 +315,7 @@ const Billing = () => {
         }
       );
     } catch (err) {
-      showToast(getErrorMessage(err, "Failed to load monthly billing"));
+      showToast(getErrorMessage(err, "Failed to load billing summary"));
     } finally {
       setLoading(false);
     }
@@ -301,13 +357,21 @@ const Billing = () => {
 
   const resetFilters = () => {
     const defaultMonth = getCurrentMonthValue();
+    const defaultReferenceDate = getCurrentDateValue();
+    setPeriodFilter("monthly");
     setMonthFilter(defaultMonth);
+    setReferenceDate(defaultReferenceDate);
     setSearchInput("");
     setAppliedSearch("");
     setBillStatusFilter("all");
     setShowClientDropdown(false);
     setHighlightedClientIndex(-1);
-    loadData({ monthFilter: defaultMonth, search: "" });
+    loadData({
+      periodFilter: "monthly",
+      monthFilter: defaultMonth,
+      referenceDate: defaultReferenceDate,
+      search: ""
+    });
   };
 
   const toggleClient = (clientId) => {
@@ -357,6 +421,11 @@ const Billing = () => {
     const outstanding = Number(row?.total_outstanding || 0);
 
     if (!row) return null;
+
+    if ((activePeriod?.period || "monthly") !== "monthly") {
+      showToast("Payment collection is available only in monthly view");
+      return null;
+    }
 
     if (!amount || amount <= 0) {
       showToast("Enter valid payment amount");
@@ -452,30 +521,56 @@ const Billing = () => {
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="page-eyebrow">Billing</p>
-            <h1 className="page-title">Monthly Billing</h1>
+            <h1 className="page-title">Billing Summary</h1>
             <p className="page-subtitle">
-              Monthly totals are shown in full detail. Daily bills stay compact for quick verification only.
+              Track daily, weekly, and monthly billing with detailed client ledgers and compact daily snapshots.
             </p>
           </div>
           <div className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-right text-xs text-slate-100">
             <p className="font-semibold uppercase tracking-wide text-slate-200">Selected Period</p>
             <p className="mt-1 text-sm font-bold text-white">
-              {getMonthLabel(activePeriod.year, activePeriod.month)}
+              {getActivePeriodLabel(activePeriod)}
             </p>
           </div>
         </div>
       </section>
 
       <section className="panel mb-6 p-5">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-7">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-8">
           <div>
-            <label className="form-label">Billing Month</label>
-            <input
-              type="month"
-              value={monthFilter}
-              onChange={(e) => setMonthFilter(e.target.value)}
-              className="form-input"
-            />
+            <label className="form-label">Period</label>
+            <select
+              value={periodFilter}
+              onChange={(e) => setPeriodFilter(e.target.value)}
+              className="form-select"
+            >
+              {BILLING_PERIOD_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="form-label">
+              {periodFilter === "monthly" ? "Billing Month" : "Reference Date"}
+            </label>
+            {periodFilter === "monthly" ? (
+              <input
+                type="month"
+                value={monthFilter}
+                onChange={(e) => setMonthFilter(e.target.value)}
+                className="form-input"
+              />
+            ) : (
+              <input
+                type="date"
+                value={referenceDate}
+                onChange={(e) => setReferenceDate(e.target.value)}
+                className="form-input"
+              />
+            )}
           </div>
 
           <div className="md:col-span-3">
@@ -560,7 +655,7 @@ const Billing = () => {
               {showClientDropdown && (
                 <div className="absolute z-30 mt-2 max-h-72 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg">
                   {clientSuggestions.length === 0 ? (
-                    <p className="px-4 py-3 text-sm text-slate-500">No clients found for selected month.</p>
+                    <p className="px-4 py-3 text-sm text-slate-500">No clients found for selected filters.</p>
                   ) : (
                     clientSuggestions.map((client, index) => (
                       <button
@@ -643,7 +738,7 @@ const Billing = () => {
         <SummaryCard title="Clients" value={summaryToShow.clients_count} />
         <SummaryCard title="Pending Invoices" value={summaryToShow.pending_invoices_count} />
         <SummaryCard
-          title="Monthly Bill"
+          title="Total Bill"
           value={formatCurrency(summaryToShow.total_monthly_bill)}
         />
         <SummaryCard
@@ -669,7 +764,6 @@ const Billing = () => {
                 <th>Client & Cycle</th>
                 <th>Monthly Ledger</th>
                 <th>Collection Status</th>
-                <th>Pending Queue</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -707,6 +801,10 @@ const Billing = () => {
                           <p className="text-right font-semibold text-slate-900">{row.invoice_count}</p>
                           <p className="text-slate-500">Pending Invoices</p>
                           <p className="text-right font-semibold text-amber-700">{row.pending_invoice_count}</p>
+                          <p className="text-slate-500">Total Jars</p>
+                          <p className="text-right font-semibold text-blue-700">
+                            {Number(row.total_jars_delivered || 0)}
+                          </p>
                           <p className="text-slate-500">Monthly Bill</p>
                           <p className="text-right font-semibold text-slate-900">
                             {formatCurrency(row.total_monthly_bill)}
@@ -742,36 +840,6 @@ const Billing = () => {
                           </p>
                         </div>
                       </td>
-                      <td className="max-w-xs">
-                        {(row.pending_invoices || []).length === 0 ? (
-                          <span className="text-xs text-slate-500">No pending invoices</span>
-                        ) : (
-                          <div className="space-y-1.5">
-                            {row.pending_invoices.slice(0, 3).map((inv) => (
-                              <div
-                                key={`pending_preview_${inv.id}`}
-                                className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-700"
-                              >
-                                <span className="font-semibold">#{inv.id}</span>
-                                <span className="ml-2 rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 uppercase text-[10px] font-semibold text-slate-600">
-                                  {inv.status}
-                                </span>
-                                <span className="ml-2 font-semibold">
-                                  {formatCurrency(inv.outstanding_amount)}
-                                </span>
-                                <span className="ml-2 rounded-full border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700">
-                                  {Number(inv.total_jars_delivered || 0)} jars
-                                </span>
-                              </div>
-                            ))}
-                            {(row.pending_invoices || []).length > 3 && (
-                              <p className="text-[11px] font-semibold text-slate-500">
-                                +{row.pending_invoices.length - 3} more in details
-                              </p>
-                            )}
-                          </div>
-                        )}
-                      </td>
                       <td>
                         <div className="flex flex-wrap gap-2">
                           <button
@@ -782,10 +850,18 @@ const Billing = () => {
                           </button>
                           <button
                             onClick={() => openPaymentModal(row)}
-                            disabled={Number(row.total_outstanding || 0) <= 0}
+                            disabled={
+                              Number(row.total_outstanding || 0) <= 0 ||
+                              (activePeriod?.period || "monthly") !== "monthly"
+                            }
                             className="btn-primary px-3 py-1.5 disabled:cursor-not-allowed disabled:bg-slate-400"
+                            title={
+                              (activePeriod?.period || "monthly") !== "monthly"
+                                ? "Payment collection is available in monthly view only"
+                                : ""
+                            }
                           >
-                            Collect Monthly Payment
+                            Collect Payment
                           </button>
                         </div>
                       </td>
@@ -793,15 +869,15 @@ const Billing = () => {
 
                     {expanded && (
                       <tr key={`${row.client_id}_details`}>
-                        <td colSpan={5}>
+                        <td colSpan={4}>
                           <div className="my-2 grid gap-4 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 lg:grid-cols-3">
                             <div className="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                               <div className="flex flex-wrap items-center justify-between gap-2">
                                 <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600">
-                                  Monthly Billing Detail
+                                  Billing Detail
                                 </h3>
                                 <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700">
-                                  {getMonthLabel(activePeriod.year, activePeriod.month)}
+                                  {getActivePeriodLabel(activePeriod)}
                                 </span>
                               </div>
 
@@ -831,42 +907,6 @@ const Billing = () => {
                                   value={Number(row.total_jars_delivered || 0)}
                                   tone="text-blue-700"
                                 />
-                              </div>
-
-                              <h4 className="mt-5 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                                Pending Invoice Queue
-                              </h4>
-                              <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                                {(row.pending_invoices || []).length === 0 ? (
-                                  <span className="text-sm text-slate-500">No pending invoices.</span>
-                                ) : (
-                                  row.pending_invoices.map((inv) => (
-                                    <div
-                                      key={`pending_${inv.id}`}
-                                      className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"
-                                    >
-                                      <p className="text-xs font-semibold text-slate-900">
-                                        Invoice #{inv.id}
-                                      </p>
-                                      <div className="mt-1 flex items-center justify-between">
-                                        <span className="rounded-full border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
-                                          {inv.status}
-                                        </span>
-                                        <p className="text-sm font-bold text-amber-700">
-                                          {formatCurrency(inv.outstanding_amount)}
-                                        </p>
-                                      </div>
-                                      <div className="mt-1 flex items-center justify-between text-[11px]">
-                                        <p className="text-slate-500">
-                                          {inv.invoice_date ? formatLocalDate(inv.invoice_date) : "-"}
-                                        </p>
-                                        <p className="font-semibold text-blue-700">
-                                          {Number(inv.total_jars_delivered || 0)} jars
-                                        </p>
-                                      </div>
-                                    </div>
-                                  ))
-                                )}
                               </div>
                             </div>
 
@@ -934,9 +974,9 @@ const Billing = () => {
           <div className="w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
             <h3 className="text-lg font-semibold text-slate-900">Record Monthly Payment</h3>
             <p className="mt-2 text-sm text-slate-600">
-              Client: <span className="font-semibold text-slate-900">{paymentModal.row?.client_name}</span> | Month:{" "}
+              Client: <span className="font-semibold text-slate-900">{paymentModal.row?.client_name}</span> | Period:{" "}
               <span className="font-semibold text-slate-900">
-                {activePeriod.year}-{String(activePeriod.month).padStart(2, "0")}
+                {getActivePeriodLabel(activePeriod)}
               </span>
             </p>
             <p className="mt-1 text-xs text-slate-500">
@@ -1024,7 +1064,7 @@ const Billing = () => {
                   }
                 />
                 <ChecklistItem
-                  label="I verified the selected billing month."
+                  label="I verified the selected billing period."
                   checked={checklist.monthVerified}
                   onChange={(checked) =>
                     setChecklist((prev) => ({ ...prev, monthVerified: checked }))
