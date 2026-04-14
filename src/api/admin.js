@@ -177,6 +177,44 @@ export const recordMonthlyPayment = async (payload) => {
   return res.data;
 };
 
+export const downloadExcelExport = async (filters = {}) => {
+  const params = {
+    report_type: filters.reportType || "full",
+    from_date: filters.fromDate || undefined,
+    to_date: filters.toDate || undefined,
+    client_id: filters.clientId || undefined,
+    driver_id: filters.driverId || undefined,
+    status: filters.status || undefined,
+    payment_method: filters.paymentMethod || undefined,
+    include_cancelled:
+      typeof filters.includeCancelled === "boolean"
+        ? filters.includeCancelled
+        : undefined
+  };
+
+  const res = await API.get("/admin/billing/exports/excel", {
+    params,
+    responseType: "blob"
+  });
+
+  const disposition = res.headers?.["content-disposition"] || "";
+  let filename = "rivarich_export.xlsx";
+
+  const utfMatch = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+  const basicMatch = disposition.match(/filename="?([^\";]+)"?/i);
+
+  if (utfMatch?.[1]) {
+    filename = decodeURIComponent(utfMatch[1]);
+  } else if (basicMatch?.[1]) {
+    filename = basicMatch[1];
+  }
+
+  return {
+    blob: res.data,
+    filename
+  };
+};
+
 /* ==========================================
    ANALYTICS
 ========================================== */
