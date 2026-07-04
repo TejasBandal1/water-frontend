@@ -9,17 +9,17 @@ const REPORT_TYPES = [
   {
     value: "full",
     label: "Full Report",
-    description: "Summary + invoices + invoice items + bills/trips + payments"
+    description: "Client summary + grouped client details + invoices + trips + payments"
   },
   {
     value: "invoices",
     label: "Invoices",
-    description: "Invoices and line-item details"
+    description: "Client-grouped invoices, container pricing, subtotals, and validation"
   },
   {
     value: "billing",
     label: "Billing",
-    description: "Trips, jars delivered/returned, and linked invoice status"
+    description: "Client summary plus grouped trips, delivered/returned, and uninvoiced quantities"
   },
   {
     value: "payments",
@@ -312,7 +312,7 @@ const Exports = () => {
       <section className="panel p-5">
         <h2 className="section-title">Export Notes</h2>
         <p className="section-subtitle">
-          Every export is logged in Audit Logs with filters used, so reporting remains traceable and professional.
+          Clients are grouped together with clear billed, delivered, returned, and uninvoiced totals. Every export is also logged in Audit Logs with the filters used.
         </p>
       </section>
 
