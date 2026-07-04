@@ -201,7 +201,7 @@ export const downloadExcelExport = async (filters = {}) => {
   let filename = "rivarich_export.xlsx";
 
   const utfMatch = disposition.match(/filename\*=UTF-8''([^;]+)/i);
-  const basicMatch = disposition.match(/filename="?([^\";]+)"?/i);
+  const basicMatch = disposition.match(/filename="?([^";]+)"?/i);
 
   if (utfMatch?.[1]) {
     filename = decodeURIComponent(utfMatch[1]);
